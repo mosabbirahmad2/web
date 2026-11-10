@@ -1,209 +1,89 @@
 {% extends 'merchant/base_merchant.html' %}
-{% block title %}Categories - Merchant Control{% endblock %}
+{% block title %}Categories Control{% endblock %}
 {% block content %}
-<!-- Include Cropper.js CDN for Pan, Zoom, and Aspect-Ratio Control -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
 <div class="max-w-6xl mx-auto space-y-6">
-  <!-- Top Bar -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <h1 class="text-2xl font-bold text-gray-800">Categories</h1>
-    <div class="flex items-center gap-3 w-full sm:w-auto">
-      <form method="GET" class="relative flex-1 sm:w-64">
-        <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search..." class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white shadow-sm">
-        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-xs"></i>
-      </form>
-      <button onclick="document.getElementById('createModal').classList.remove('hidden')" class="btn-purple px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap shadow-sm hover:opacity-95 transition">
-        <i class="fa-solid fa-plus text-xs"></i> Add Categories
-      </button>
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-black text-slate-900">Categories & Collections</h1>
+      <p class="text-xs text-slate-400 mt-1">Organize your store's catalog and sub-categories</p>
     </div>
+    <button onclick="document.getElementById('catModal').classList.remove('hidden')" class="btn-purple px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm">
+      <i class="fa-solid fa-plus"></i> Add Category
+    </button>
   </div>
 
-  <!-- Categories Table (Image 0 Exact Match) -->
-  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-    <table class="w-full text-left text-sm text-gray-600">
-      <tbody class="divide-y divide-gray-100">
+  <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+    <table class="w-full text-left text-xs text-slate-600">
+      <thead class="bg-slate-50 text-slate-400 uppercase text-[10px] font-bold border-b">
+        <tr>
+          <th class="p-4">Visual</th>
+          <th class="p-4">Name</th>
+          <th class="p-4">Subcategories</th>
+          <th class="p-4">Status</th>
+          <th class="p-4 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
         {% for cat in categories %}
-        <tr class="hover:bg-gray-50 transition group">
-          <td class="p-4 w-10 text-gray-300 cursor-move text-center"><i class="fa-solid fa-grip-vertical"></i></td>
+        <tr class="hover:bg-slate-50/50">
           <td class="p-4 w-16">
-            <div class="w-12 h-12 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
-              {% if cat.image %}
-                <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover">
-              {% else %}
-                <i class="fa-regular fa-image text-gray-400 text-lg"></i>
-              {% endif %}
+            <div class="w-10 h-10 rounded-xl bg-slate-100 border overflow-hidden flex items-center justify-center">
+              {% if cat.image %}<img src="{{ cat.image.url }}" class="w-full h-full object-cover">
+              {% else %}<i class="fa-solid fa-folder text-slate-300"></i>{% endif %}
             </div>
           </td>
-          <td class="p-4 font-medium text-gray-900 text-base">
-            <div class="flex items-center gap-2">
-              <a href="{% url 'merchant_category_detail' cat.pk %}" class="hover:text-purple-700 transition">
-                {{ cat.name }}
-              </a>
-              <a href="{% url 'shop_category' cat.slug %}" target="_blank" title="View live in shop" class="text-gray-400 hover:text-purple-600 p-1">
-                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-              </a>
-            </div>
+          <td class="p-4 font-bold text-slate-900">
+            <a href="{% url 'merchant_category_detail' cat.pk %}" class="hover:text-purple-600">{{ cat.name }}</a>
           </td>
-          <td class="p-4 text-right space-x-3 text-gray-400 whitespace-nowrap">
-            <a href="{% url 'merchant_toggle_category' cat.pk %}" title="Toggle Visibility" class="hover:text-purple-600 inline-block p-1">
-              <i class="fa-solid fa-eye {% if cat.is_active %}text-purple-600{% else %}text-gray-300{% endif %}"></i>
-            </a>
-            <a href="{% url 'merchant_category_detail' cat.pk %}" class="hover:text-purple-600 inline-block p-1" title="Edit Category">
-              <i class="fa-solid fa-pen"></i>
-            </a>
-            <a href="{% url 'merchant_delete_category' cat.pk %}" onclick="return confirm('Are you sure you want to delete category {{ cat.name|escapejs }}?')" class="hover:text-red-600 inline-block p-1" title="Delete Category">
+          <td class="p-4 font-semibold text-slate-700">{{ cat.subcategories.count }} Subcategory(ies)</td>
+          <td class="p-4">
+            <form method="POST" action="{% url 'merchant_toggle_category' cat.pk %}" class="inline">
+              {% csrf_token %}
+              <button type="submit" class="p-1 text-base {% if cat.is_active %}text-emerald-600{% else %}text-slate-300{% endif %}">
+                <i class="fa-solid fa-toggle-on"></i>
+              </button>
+            </form>
+          </td>
+          <td class="p-4 text-right space-x-2">
+            <a href="{% url 'merchant_category_detail' cat.pk %}" class="p-1.5 text-slate-400 hover:text-purple-600"><i class="fa-solid fa-pen"></i></a>
+            <button type="button" onclick="triggerActionModal('{% url 'merchant_delete_category' cat.pk %}', 'Delete category {{ cat.name|escapejs }}?')" class="p-1.5 text-slate-400 hover:text-rose-600">
               <i class="fa-regular fa-trash-can"></i>
-            </a>
+            </button>
           </td>
         </tr>
         {% empty %}
-        <tr>
-          <td colspan="4" class="p-12 text-center text-gray-400">
-            <i class="fa-regular fa-folder-open text-4xl mb-3 block text-gray-300"></i>
-            No categories found. Click <strong>"+ Add Categories"</strong> above.
-          </td>
-        </tr>
+        <tr><td colspan="5" class="p-12 text-center text-slate-400">No categories added yet.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
 
-<!-- Modal: Create Category (Image 0 Exact Match) -->
-<div id="createModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-  <div class="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
-    <div class="px-6 py-4 flex justify-between items-center border-b border-gray-100 sticky top-0 bg-white z-10">
-      <h3 class="text-lg font-bold text-gray-900">Create Category</h3>
-      <button onclick="document.getElementById('createModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl font-light p-1">&times;</button>
+<div id="catModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
+    <div class="flex justify-between items-center border-b pb-3">
+      <h3 class="font-bold text-slate-900 text-base">Create Category</h3>
+      <button onclick="document.getElementById('catModal').classList.add('hidden')" class="text-slate-400 text-xl">&times;</button>
     </div>
-    <form method="POST" action="{% url 'merchant_categories' %}" enctype="multipart/form-data" class="p-6 space-y-6">
+    <form method="POST" enctype="multipart/form-data" class="space-y-4">
       {% csrf_token %}
-      
-      <!-- Banner/Cover Box -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Banner/Cover</label>
-        <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center bg-gray-50/50 hover:bg-gray-50 transition relative min-h-[170px] flex flex-col items-center justify-center">
-          <div id="banner_prev_box" class="hidden w-full mb-3">
-            <img id="banner_prev_img" src="" class="h-28 w-full object-cover rounded-lg border shadow-sm">
-          </div>
-          <div id="banner_placeholder">
-            <i class="fa-regular fa-image text-purple-600 text-3xl mb-2"></i>
-            <p class="text-xs text-gray-500 max-w-md mx-auto mb-3">Upload a banner image for the category. Recommended size is 1300×380 pixels. Maximum file size is 4MB.</p>
-          </div>
-          <input type="file" id="cat_banner" name="banner" accept="image/*" class="hidden" onchange="initCropper(this, 1300/380, 'banner_prev_box', 'banner_prev_img', 'banner_placeholder')">
-          <button type="button" onclick="document.getElementById('cat_banner').click()" class="px-5 py-2 bg-purple-100 text-purple-700 text-xs font-semibold rounded-lg hover:bg-purple-200 transition">Add Image</button>
-        </div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Category Name *</label>
+        <input type="text" name="name" required class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        <!-- Square Image Box -->
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1">Image</label>
-          <div class="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center bg-gray-50/50 min-h-[260px] flex flex-col items-center justify-center">
-            <div id="img_prev_box" class="hidden mb-3">
-              <img id="img_prev_img" src="" class="w-24 h-24 object-cover rounded-xl border shadow-sm">
-            </div>
-            <div id="img_placeholder">
-              <i class="fa-regular fa-image text-purple-600 text-3xl mb-2"></i>
-              <p class="text-[11px] text-gray-500 mb-3 px-2 leading-relaxed">
-                Upload a square image for the category (1:1) aspect ratio. Recommended size is 500×500 pixels. Maximum file size is 4MB.<br>
-                <span class="text-gray-400">Note: Recommended image size: 770 × 1024 px (Sellora theme).</span>
-              </p>
-            </div>
-            <input type="file" id="cat_img" name="image" accept="image/*" class="hidden" onchange="initCropper(this, 1/1, 'img_prev_box', 'img_prev_img', 'img_placeholder')">
-            <button type="button" onclick="document.getElementById('cat_img').click()" class="px-5 py-2 bg-purple-100 text-purple-700 text-xs font-semibold rounded-lg hover:bg-purple-200 transition">Add Image</button>
-          </div>
-        </div>
-
-        <!-- Name & Short Description -->
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Category Name <span class="text-red-500">*</span></label>
-            <input type="text" name="name" maxlength="50" required placeholder="Category Name" oninput="document.getElementById('name_cnt').innerText = 50 - this.value.length" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-600">
-            <div class="text-right text-[11px] text-gray-400 mt-1">Character limit: <span id="name_cnt">50</span></div>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Short Description</label>
-            <textarea name="short_description" rows="6" placeholder="Short description..." class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-1 focus:ring-purple-600"></textarea>
-          </div>
-        </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Category Thumbnail</label>
+        <input type="file" name="image" accept="image/*" class="w-full text-xs border rounded-xl p-2 bg-slate-50">
       </div>
-
-      <div class="flex gap-3 pt-4 border-t border-gray-100">
-        <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition">Cancel</button>
-        <button type="submit" class="flex-1 py-2.5 btn-purple rounded-lg text-sm font-semibold hover:opacity-95 transition shadow">Create</button>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Short Description</label>
+        <textarea name="short_description" rows="2" class="w-full border rounded-xl p-3 text-xs bg-slate-50 outline-none"></textarea>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('catModal').classList.add('hidden')" class="flex-1 py-2 border rounded-xl font-bold text-xs">Cancel</button>
+        <button type="submit" class="flex-1 py-2 btn-purple rounded-xl font-bold text-xs shadow-md">Create</button>
       </div>
     </form>
   </div>
 </div>
-
-<!-- Interactive Pan & Zoom Cropping Modal -->
-<div id="cropModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-  <div class="bg-white rounded-3xl w-full max-w-xl p-6 shadow-2xl space-y-4">
-    <div class="flex justify-between items-center border-b pb-3">
-      <h3 class="font-bold text-gray-900 text-base">Adjust, Zoom & Crop Image</h3>
-      <button onclick="closeCropperModal()" class="text-gray-400 hover:text-black text-xl">&times;</button>
-    </div>
-    <div class="max-h-[360px] overflow-hidden bg-gray-900 rounded-xl flex items-center justify-center">
-      <img id="cropperImageTarget" src="" class="max-w-full">
-    </div>
-    <div class="flex items-center justify-center gap-4 text-sm font-bold text-gray-600 py-1">
-      <button type="button" onclick="cropper.zoom(0.1)" class="px-3 py-1 bg-gray-100 rounded-lg hover:bg-gray-200"><i class="fa-solid fa-magnifying-glass-plus"></i> Zoom In</button>
-      <button type="button" onclick="cropper.zoom(-0.1)" class="px-3 py-1 bg-gray-100 rounded-lg hover:bg-gray-200"><i class="fa-solid fa-magnifying-glass-minus"></i> Zoom Out</button>
-      <button type="button" onclick="cropper.rotate(90)" class="px-3 py-1 bg-gray-100 rounded-lg hover:bg-gray-200"><i class="fa-solid fa-rotate-right"></i> Rotate</button>
-    </div>
-    <div class="flex gap-3 pt-2">
-      <button type="button" onclick="closeCropperModal()" class="flex-1 py-2 border rounded-xl font-bold text-xs text-gray-600 hover:bg-gray-50">Cancel</button>
-      <button type="button" onclick="applyCrop()" class="flex-1 py-2 btn-purple rounded-xl font-bold text-xs shadow">Apply Image</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  let cropper = null;
-  let currentTargetBox = '';
-  let currentTargetImg = '';
-  let currentTargetPh = '';
-
-  function initCropper(input, aspectRatio, boxId, imgId, phId) {
-    if (input.files && input.files[0]) {
-      currentTargetBox = boxId;
-      currentTargetImg = imgId;
-      currentTargetPh = phId;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const cropTarget = document.getElementById('cropperImageTarget');
-        cropTarget.src = e.target.result;
-        document.getElementById('cropModal').classList.remove('hidden');
-
-        if (cropper) cropper.destroy();
-        cropper = new Cropper(cropTarget, {
-          aspectRatio: aspectRatio,
-          viewMode: 1,
-          autoCropArea: 0.9,
-          responsive: true,
-        });
-      };
-      reader.readAsDataURL(input.files[0]);
-    }
-  }
-
-  function applyCrop() {
-    if (cropper) {
-      const canvas = cropper.getCroppedCanvas();
-      document.getElementById(currentTargetImg).src = canvas.toDataURL();
-      document.getElementById(currentTargetBox).classList.remove('hidden');
-      if (currentTargetPh) document.getElementById(currentTargetPh).classList.add('hidden');
-      closeCropperModal();
-    }
-  }
-
-  function closeCropperModal() {
-    document.getElementById('cropModal').classList.add('hidden');
-    if (cropper) cropper.destroy();
-  }
-</script>
 {% endblock %}

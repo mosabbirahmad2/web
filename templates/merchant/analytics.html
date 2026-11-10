@@ -1,189 +1,140 @@
 {% extends 'merchant/base_merchant.html' %}
-{% block title %}Analytics - Business Intelligence{% endblock %}
+{% block title %}Analytics Engine - Fantacy Tech{% endblock %}
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <div class="max-w-6xl mx-auto space-y-8">
-  <div class="flex justify-between items-center">
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-800">Advanced Business Intelligence</h1>
-      <p class="text-xs text-gray-400 mt-1">Fantacy Tech রিয়েল-টাইম কাস্টমার আচরণ ও বিক্রয় পরিসংখ্যান</p>
+      <h1 class="text-2xl font-black text-slate-900">Business Intelligence & Analytics</h1>
+      <p class="text-xs text-slate-400 mt-1">Real-time metrics, funnel conversions and customer patterns</p>
     </div>
-    <span class="text-xs font-bold px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full flex items-center gap-1.5">
-      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Live Tracking Active
-    </span>
+    
+    <!-- Time Period Filter -->
+    <div class="flex items-center gap-1 bg-white p-1 rounded-2xl border shadow-sm text-xs font-bold">
+      <a href="?period=12h" class="px-3 py-1.5 rounded-xl {% if period == '12h' %}bg-purple-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">12h</a>
+      <a href="?period=24h" class="px-3 py-1.5 rounded-xl {% if period == '24h' %}bg-purple-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">24h</a>
+      <a href="?period=48h" class="px-3 py-1.5 rounded-xl {% if period == '48h' %}bg-purple-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">48h</a>
+      <a href="?period=7d" class="px-3 py-1.5 rounded-xl {% if period == '7d' %}bg-purple-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">7d</a>
+      <a href="?period=15d" class="px-3 py-1.5 rounded-xl {% if period == '15d' %}bg-purple-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">15d</a>
+      <a href="?period=30d" class="px-3 py-1.5 rounded-xl {% if period == '30d' %}bg-purple-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">30d</a>
+    </div>
   </div>
 
-  <!-- Primary Performance KPI Grid (আপনার চাওয়া মেট্রিক্সসমূহ) -->
+  <!-- KPI Grid -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-      <span class="text-[11px] font-bold text-gray-400 uppercase">Unique Visitors</span>
-      <div class="text-2xl font-black text-gray-900 mt-1">{{ unique_visitors }}</div>
-      <span class="text-[10px] text-blue-600 font-semibold">With analytics consent</span>
+    <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+      <div class="text-[10px] font-bold text-slate-400 uppercase">Period Revenue</div>
+      <div class="text-xl font-black text-emerald-600 mt-1">৳ {{ paid_rev }}</div>
     </div>
-
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-      <span class="text-[11px] font-bold text-gray-400 uppercase">Product Views</span>
-      <div class="text-2xl font-black text-purple-700 mt-1">{{ product_views }}</div>
-      <span class="text-[10px] text-gray-400">Total clicks on items</span>
+    <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+      <div class="text-[10px] font-bold text-slate-400 uppercase">Avg. Order Value</div>
+      <div class="text-xl font-black text-slate-800 mt-1">৳ {{ avg_paid_order }}</div>
     </div>
-
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-      <span class="text-[11px] font-bold text-gray-400 uppercase">Search Queries</span>
-      <div class="text-2xl font-black text-amber-600 mt-1">{{ search_queries }}</div>
-      <span class="text-[10px] text-gray-400">Search bar queries</span>
+    <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+      <div class="text-[10px] font-bold text-slate-400 uppercase">Conversion Rate</div>
+      <div class="text-xl font-black text-purple-600 mt-1">{{ visitor_to_purchase_rate }}%</div>
     </div>
-
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-      <span class="text-[11px] font-bold text-gray-400 uppercase">Add to Cart Events</span>
-      <div class="text-2xl font-black text-indigo-600 mt-1">{{ add_to_cart_events }}</div>
-      <span class="text-[10px] text-gray-400">Items added to bag</span>
-    </div>
-
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-      <span class="text-[11px] font-bold text-gray-400 uppercase">Checkout Starts</span>
-      <div class="text-2xl font-black text-orange-600 mt-1">{{ checkout_starts }}</div>
-      <span class="text-[10px] text-gray-400">Opened checkout modal</span>
-    </div>
-
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-      <span class="text-[11px] font-bold text-gray-400 uppercase">Completed Orders</span>
-      <div class="text-2xl font-black text-emerald-600 mt-1">{{ completed_orders }}</div>
-      <span class="text-[10px] text-emerald-600 font-semibold">Verified delivered</span>
-    </div>
-
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-      <span class="text-[11px] font-bold text-gray-400 uppercase">Paid Orders (30 Days)</span>
-      <div class="text-2xl font-black text-gray-900 mt-1">{{ paid_orders_30 }}</div>
-      <span class="text-[10px] text-gray-400">Last 30 days orders</span>
-    </div>
-
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-      <span class="text-[11px] font-bold text-gray-400 uppercase">Visitor to Purchase Rate</span>
-      <div class="text-2xl font-black text-rose-600 mt-1">{{ visitor_to_purchase_rate }}%</div>
-      <span class="text-[10px] text-gray-400">Conversion efficiency</span>
-    </div>
-
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-      <span class="text-[11px] font-bold text-gray-400 uppercase">Paid Revenue (30 Days)</span>
-      <div class="text-2xl font-black text-emerald-700 mt-1">৳ {{ paid_rev_30 }}</div>
-      <span class="text-[10px] text-gray-400">Last month earnings</span>
-    </div>
-
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-      <span class="text-[11px] font-bold text-gray-400 uppercase">All-time Paid Revenue</span>
-      <div class="text-2xl font-black text-emerald-800 mt-1">৳ {{ all_time_revenue }}</div>
-      <span class="text-[10px] text-gray-400">Gross sales</span>
-    </div>
-
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-      <span class="text-[11px] font-bold text-gray-400 uppercase">Average Paid Order</span>
-      <div class="text-2xl font-black text-gray-800 mt-1">৳ {{ avg_paid_order }}</div>
-      <span class="text-[10px] text-gray-400">Per delivered sale</span>
-    </div>
-
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-      <span class="text-[11px] font-bold text-gray-400 uppercase">Abandoned Carts</span>
-      <div class="text-2xl font-black text-red-500 mt-1">{{ abandoned_carts }}</div>
-      <span class="text-[10px] text-red-400">Added but not purchased</span>
+    <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+      <div class="text-[10px] font-bold text-slate-400 uppercase">Cart Abandonment</div>
+      <div class="text-xl font-black text-rose-500 mt-1">{{ abandoned_carts }}</div>
     </div>
   </div>
 
-  <!-- Separate Individual Graphs (প্রত্যেকটি বিষয়ের জন্য আলাদা চার্ট) -->
+  <!-- Charts Row 1: Revenue Trend & Traffic -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Graph 1: সবচেয়ে বেশি অর্ডার হওয়া প্রোডাক্ট -->
-    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-      <h3 class="font-bold text-gray-800 text-sm mb-4">সবচেয়ে বেশি অর্ডার হওয়া প্রোডাক্ট (Top Selling)</h3>
-      <div class="h-64">
-        <canvas id="topOrderedChart"></canvas>
-      </div>
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+      <h3 class="text-xs font-bold uppercase text-slate-500">Revenue Trend (Delivered Sales)</h3>
+      <div class="h-64"><canvas id="revChart"></canvas></div>
     </div>
-
-    <!-- Graph 2: সবচেয়ে বেশি ক্লিক করা প্রোডাক্ট -->
-    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-      <h3 class="font-bold text-gray-800 text-sm mb-4">সবচেয়ে বেশি ভিউ/ক্লিক হওয়া প্রোডাক্ট (Most Viewed)</h3>
-      <div class="h-64">
-        <canvas id="mostClickedChart"></canvas>
-      </div>
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+      <h3 class="text-xs font-bold uppercase text-slate-500">Unique Visitors Traffic</h3>
+      <div class="h-64"><canvas id="trafficChart"></canvas></div>
     </div>
   </div>
 
+  <!-- Charts Row 2: Sales Funnel & Order Status Breakdown -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Graph 3: কোন এড্রেস/জেলা থেকে সবচেয়ে বেশি অর্ডার এসেছে -->
-    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-      <h3 class="font-bold text-gray-800 text-sm mb-4">অর্ডারের জেলা ও এরিয়া বিশ্লেষণ (Top Delivery Locations)</h3>
-      <div class="h-64">
-        <canvas id="locationChart"></canvas>
-      </div>
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+      <h3 class="text-xs font-bold uppercase text-slate-500">Store Sales Funnel</h3>
+      <div class="h-64"><canvas id="funnelChart"></canvas></div>
     </div>
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+      <h3 class="text-xs font-bold uppercase text-slate-500">Orders Status Distribution</h3>
+      <div class="h-64"><canvas id="statusChart"></canvas></div>
+    </div>
+  </div>
 
-    <!-- Graph 4: গত ৭ দিনের ইউনিক ভিজিটর ট্রেন্ড -->
-    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-      <h3 class="font-bold text-gray-800 text-sm mb-4">দৈনিক ইউনিক ভিজিটর বৃদ্ধি (Last 7 Days)</h3>
-      <div class="h-64">
-        <canvas id="trafficTrendChart"></canvas>
-      </div>
+  <!-- Charts Row 3: Device Analytics & Top Selling Products -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+      <h3 class="text-xs font-bold uppercase text-slate-500">Device Platform Breakdown</h3>
+      <div class="h-64"><canvas id="deviceChart"></canvas></div>
+    </div>
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+      <h3 class="text-xs font-bold uppercase text-slate-500">Top Ordered Products</h3>
+      <div class="h-64"><canvas id="topOrderChart"></canvas></div>
     </div>
   </div>
 </div>
 
 <script>
-  // ১. সবচেয়ে বেশি অর্ডার হওয়া প্রোডাক্ট বার চার্ট
-  new Chart(document.getElementById('topOrderedChart'), {
-    type: 'bar',
-    data: {
-      labels: {{ order_prod_labels|safe }},
-      datasets: [{
-        label: 'মোট বিক্রয় সংখ্যা',
-        data: {{ order_prod_data|safe }},
-        backgroundColor: '#5C3214',
-        borderRadius: 8
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  // ২. সবচেয়ে বেশি ক্লিক হওয়া প্রোডাক্ট চার্ট
-  new Chart(document.getElementById('mostClickedChart'), {
-    type: 'bar',
-    data: {
-      labels: {{ clicked_labels|safe }},
-      datasets: [{
-        label: 'মোট ক্লিক/ভিউ',
-        data: {{ clicked_data|safe }},
-        backgroundColor: '#7C3AED',
-        borderRadius: 8
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  // ৩. জেলা ও এরিয়া চার্ট
-  new Chart(document.getElementById('locationChart'), {
-    type: 'doughnut',
-    data: {
-      labels: {{ location_labels|safe }},
-      datasets: [{
-        data: {{ location_data|safe }},
-        backgroundColor: ['#059669', '#2563EB', '#D97706', '#DC2626', '#4B5563', '#9333EA']
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  // ৪. ভিজিটর ট্রেন্ড লাইন চার্ট
-  new Chart(document.getElementById('trafficTrendChart'), {
+  // 1. Revenue
+  new Chart(document.getElementById('revChart'), {
     type: 'line',
     data: {
-      labels: {{ chart_dates|safe }},
-      datasets: [{
-        label: 'ইউনিক ভিজিটর',
-        data: {{ traffic_trend|safe }},
-        borderColor: '#2563EB',
-        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-        fill: true,
-        tension: 0.4
-      }]
+      labels: {{ rev_labels|safe }},
+      datasets: [{ label: 'Sales (BDT)', data: {{ rev_data|safe }}, borderColor: '#059669', backgroundColor: 'rgba(5, 150, 105, 0.1)', fill: true, tension: 0.3 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  // 2. Traffic
+  new Chart(document.getElementById('trafficChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ chart_labels|safe }},
+      datasets: [{ label: 'Visitors', data: {{ chart_data|safe }}, backgroundColor: '#7C3AED', borderRadius: 6 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  // 3. Funnel
+  new Chart(document.getElementById('funnelChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ funnel_labels|safe }},
+      datasets: [{ label: 'Users', data: {{ funnel_data|safe }}, backgroundColor: ['#3B82F6', '#8B5CF6', '#EC4899', '#F97316', '#10B981'], borderRadius: 6 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y' }
+  });
+
+  // 4. Status
+  new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+      labels: {{ status_labels|safe }},
+      datasets: [{ data: {{ status_data|safe }}, backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#6B7280'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  // 5. Device
+  new Chart(document.getElementById('deviceChart'), {
+    type: 'pie',
+    data: {
+      labels: {{ device_labels|safe }},
+      datasets: [{ data: {{ device_data|safe }}, backgroundColor: ['#6366F1', '#EC4899', '#14B8A6'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  // 6. Top Ordered
+  new Chart(document.getElementById('topOrderChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ order_labels|safe }},
+      datasets: [{ label: 'Units Sold', data: {{ order_data|safe }}, backgroundColor: '#5C3214', borderRadius: 6 }]
     },
     options: { responsive: true, maintainAspectRatio: false }
   });

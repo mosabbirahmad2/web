@@ -6,7 +6,7 @@ class AnalyticsMiddleware:
 
     def __call__(self, request):
         path = request.path
-        if not path.startswith('/static/') and not path.startswith('/media/'):
+        if not path.startswith('/static/') and not path.startswith('/media/') and not path.startswith('/django-admin/'):
             ua = request.META.get('HTTP_USER_AGENT', '')
             ip = request.META.get('HTTP_X_FORWARDED_FOR')
             if ip:
@@ -14,8 +14,18 @@ class AnalyticsMiddleware:
             else:
                 ip = request.META.get('REMOTE_ADDR')
 
-            device = 'Mobile' if any(w in ua.lower() for w in ['mobile', 'android', 'iphone']) else 'Desktop'
-            browser = 'Chrome' if 'chrome' in ua.lower() else ('Firefox' if 'firefox' in ua.lower() else 'Safari' if 'safari' in ua.lower() else 'Other')
+            ua_lower = ua.lower()
+            device = 'Mobile' if any(w in ua_lower for w in ['mobile', 'android', 'iphone']) else 'Desktop'
+            if 'chrome' in ua_lower and 'edg' not in ua_lower:
+                browser = 'Chrome'
+            elif 'firefox' in ua_lower:
+                browser = 'Firefox'
+            elif 'safari' in ua_lower and 'chrome' not in ua_lower:
+                browser = 'Safari'
+            elif 'edg' in ua_lower:
+                browser = 'Edge'
+            else:
+                browser = 'Other'
 
             try:
                 AnalyticsEvent.objects.create(
@@ -24,6 +34,7 @@ class AnalyticsMiddleware:
                     device_type=device,
                     browser=browser,
                     path=path[:250],
+                    event_type='visit',
                     referrer=request.META.get('HTTP_REFERER', '')[:250]
                 )
             except Exception:

@@ -1,98 +1,90 @@
 {% extends 'merchant/base_merchant.html' %}
-{% block title %}Homepage Sections - Merchant Control{% endblock %}
+{% block title %}Showcase Sections{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto space-y-6">
   <div class="flex justify-between items-center">
     <div>
-      <h1 class="text-2xl font-bold text-gray-800">Homepage Showcase Sections</h1>
-      <p class="text-xs text-gray-400">Control Flash Sale, Trending Now, Most Popular, Hot Deals and custom showcases</p>
+      <h1 class="text-2xl font-black text-slate-900">Homepage Showcase Sections</h1>
+      <p class="text-xs text-slate-400 mt-1">Configure Flash Sales, Featured Drops and Custom Sections</p>
     </div>
-    <button onclick="document.getElementById('sectionModal').classList.remove('hidden')" class="btn-purple px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
-      <i class="fa-solid fa-plus text-xs"></i> Create Section
+    <button onclick="document.getElementById('secModal').classList.remove('hidden')" class="btn-purple px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm">
+      <i class="fa-solid fa-plus"></i> Create Section
     </button>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     {% for sec in sections %}
-    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
       <div class="flex justify-between items-start">
         <div>
-          <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full {% if sec.background_style == 'brown' %}bg-amber-100 text-amber-800{% elif sec.background_style == 'dark' %}bg-gray-800 text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
-            {{ sec.get_background_style_display }}
-          </span>
-          <h3 class="text-lg font-black text-gray-800 mt-2">{{ sec.title }}</h3>
-          {% if sec.has_countdown %}
-          <span class="text-xs text-red-600 font-bold"><i class="fa-solid fa-stopwatch"></i> Countdown Active</span>
+          <span class="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase bg-slate-100 text-slate-700">{{ sec.get_background_style_display }}</span>
+          <h3 class="text-lg font-black text-slate-900 mt-2">{{ sec.title }}</h3>
+          {% if sec.has_countdown and sec.end_time %}
+          <div class="text-xs text-rose-600 font-bold mt-1 flex items-center gap-1.5">
+            <i class="fa-regular fa-clock"></i> Ends: {{ sec.end_time|date:"M d, Y H:i" }}
+          </div>
           {% endif %}
         </div>
         <div class="flex items-center gap-2">
-          <a href="{% url 'merchant_toggle_section' sec.pk %}" class="text-gray-400 hover:text-purple-600 p-1" title="Toggle On/Off">
-            <i class="fa-solid fa-toggle-on text-xl {% if sec.is_active %}text-purple-600{% else %}text-gray-300{% endif %}"></i>
-          </a>
-          <a href="{% url 'merchant_delete_section' sec.pk %}" onclick="return confirm('Delete this section from homepage?')" class="text-gray-400 hover:text-red-600 p-1">
+          <form method="POST" action="{% url 'merchant_toggle_section' sec.pk %}" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="text-lg {% if sec.is_active %}text-purple-600{% else %}text-slate-300{% endif %}">
+              <i class="fa-solid fa-toggle-on"></i>
+            </button>
+          </form>
+          <button type="button" onclick="triggerActionModal('{% url 'merchant_delete_section' sec.pk %}', 'Delete section {{ sec.title|escapejs }}?')" class="text-slate-400 hover:text-rose-600">
             <i class="fa-regular fa-trash-can"></i>
-          </a>
+          </button>
         </div>
       </div>
-
-      <div class="border-t pt-3">
-        <span class="text-xs font-semibold text-gray-500">Assigned Products ({{ sec.products.count }}):</span>
-        <div class="flex flex-wrap gap-1.5 mt-2">
-          {% for p in sec.products.all|slice:":6" %}
-          <span class="text-[11px] bg-gray-100 px-2.5 py-1 rounded-lg text-gray-700 font-medium">{{ p.name|truncatechars:20 }}</span>
-          {% empty %}
-          <span class="text-xs text-gray-400 italic">No products assigned yet.</span>
-          {% endfor %}
-        </div>
+      <div class="text-xs text-slate-500 font-medium border-t pt-3">
+        Assigned Products: <span class="font-bold text-slate-900">{{ sec.products.count }}</span>
       </div>
-    </div>
-    {% empty %}
-    <div class="col-span-2 text-center py-16 bg-white rounded-2xl border border-dashed text-gray-400">
-      <i class="fa-solid fa-layer-group text-3xl mb-2 text-gray-300 block"></i>
-      Click "+ Create Section" to add "Flash Sale", "Trending Now", "Hot Deal of the Day" etc.
     </div>
     {% endfor %}
   </div>
 </div>
 
-<!-- Modal: Create Section -->
-<div id="sectionModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+<!-- Modal: Create Section with DateTime Countdown -->
+<div id="secModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
     <div class="flex justify-between items-center border-b pb-3">
-      <h3 class="font-bold text-gray-900 text-lg">Create Homepage Section</h3>
-      <button onclick="document.getElementById('sectionModal').classList.add('hidden')" class="text-gray-400 hover:text-black text-xl">&times;</button>
+      <h3 class="font-bold text-slate-900 text-base">Create Showcase Section</h3>
+      <button onclick="document.getElementById('secModal').classList.add('hidden')" class="text-slate-400 text-xl">&times;</button>
     </div>
     <form method="POST" class="space-y-4">
       {% csrf_token %}
-      <input type="hidden" name="action" value="create_section">
       <div>
-        <label class="block text-xs font-semibold text-gray-700 mb-1">Section Title *</label>
-        <input type="text" name="title" required placeholder="e.g. Flash Sale, Trending Now, Hot Deal of the Day" class="w-full border rounded-xl px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
+        <label class="block text-xs font-bold text-slate-700 mb-1">Section Title *</label>
+        <input type="text" name="title" required placeholder="e.g. Flash Sale" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
       </div>
       <div>
-        <label class="block text-xs font-semibold text-gray-700 mb-1">Theme / Background Style</label>
-        <select name="background_style" class="w-full border rounded-xl px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
+        <label class="block text-xs font-bold text-slate-700 mb-1">Visual Theme</label>
+        <select name="background_style" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
           <option value="light">White / Light Minimal</option>
-          <option value="brown">Warm Coffee Brown (Dazzle Theme)</option>
-          <option value="dark">Dark Charcoal Black</option>
+          <option value="brown">Warm Coffee Brown</option>
+          <option value="dark">Charcoal Black</option>
         </select>
       </div>
-      <div class="flex items-center gap-2 pt-1">
-        <input type="checkbox" name="has_countdown" id="count_chk" class="w-4 h-4 text-purple-600 rounded">
-        <label for="count_chk" class="text-xs font-semibold text-gray-700">Include Countdown Timer (Flash Sale)</label>
+      <div class="flex items-center gap-2">
+        <input type="checkbox" name="has_countdown" id="cd_check" class="rounded text-purple-600">
+        <label for="cd_check" class="text-xs font-bold text-slate-700">Enable Countdown Expiration</label>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-gray-700 mb-1">Select Products to Feature</label>
-        <select name="products" multiple class="w-full border rounded-xl p-3 text-xs focus:ring-1 focus:ring-purple-600 outline-none h-40">
+        <label class="block text-xs font-bold text-slate-700 mb-1">Countdown End Datetime</label>
+        <input type="datetime-local" name="end_time" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Featured Products</label>
+        <select name="products" multiple class="w-full border rounded-xl p-2 text-xs bg-slate-50 h-32 outline-none">
           {% for p in all_products %}
           <option value="{{ p.id }}">{{ p.name }} (৳{{ p.effective_price }})</option>
           {% endfor %}
         </select>
-        <span class="text-[10px] text-gray-400">Hold Ctrl (Cmd) to select multiple products</span>
       </div>
-      <div class="flex gap-3 pt-3 border-t">
-        <button type="button" onclick="document.getElementById('sectionModal').classList.add('hidden')" class="flex-1 py-2.5 border rounded-xl font-bold text-xs">Cancel</button>
-        <button type="submit" class="flex-1 py-2.5 btn-purple rounded-xl font-bold text-xs">Save Section</button>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('secModal').classList.add('hidden')" class="flex-1 py-2 border rounded-xl font-bold text-xs">Cancel</button>
+        <button type="submit" class="flex-1 py-2 btn-purple rounded-xl font-bold text-xs shadow-md">Save</button>
       </div>
     </form>
   </div>

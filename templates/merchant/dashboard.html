@@ -1,24 +1,90 @@
 {% extends 'merchant/base_merchant.html' %}
-{% block title %}Dashboard - Merchant Control{% endblock %}
+{% block title %}Dashboard - Store Overview{% endblock %}
 {% block content %}
-<div class="max-w-6xl mx-auto space-y-6">
-  <h1 class="text-2xl font-bold text-gray-800">Store Overview</h1>
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-    <div class="bg-white p-6 rounded-2xl border border-gray-200">
-      <div class="text-xs font-semibold text-gray-400 uppercase">Total Sales</div>
-      <div class="text-2xl font-extrabold text-green-600 mt-2">৳ {{ total_sales }}</div>
+<div class="max-w-6xl mx-auto space-y-8">
+  <div>
+    <h1 class="text-2xl font-black text-slate-900">Dashboard & Store Performance</h1>
+    <p class="text-xs text-slate-500 mt-1">Real-time overview of revenue, operations and traffic</p>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+        <i class="fa-solid fa-bangladeshi-taka-sign"></i>
+      </div>
+      <div>
+        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Gross Sales</div>
+        <div class="text-2xl font-black text-slate-900 mt-0.5">৳ {{ total_sales }}</div>
+      </div>
     </div>
-    <div class="bg-white p-6 rounded-2xl border border-gray-200">
-      <div class="text-xs font-semibold text-gray-400 uppercase">Total Orders</div>
-      <div class="text-2xl font-extrabold text-blue-600 mt-2">{{ total_orders }}</div>
+
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
+        <i class="fa-solid fa-cart-shopping"></i>
+      </div>
+      <div>
+        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Orders</div>
+        <div class="text-2xl font-black text-slate-900 mt-0.5">{{ total_orders }}</div>
+      </div>
     </div>
-    <div class="bg-white p-6 rounded-2xl border border-gray-200">
-      <div class="text-xs font-semibold text-gray-400 uppercase">Products</div>
-      <div class="text-2xl font-extrabold text-purple-600 mt-2">{{ total_products }}</div>
+
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0">
+        <i class="fa-solid fa-box"></i>
+      </div>
+      <div>
+        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Inventory Items</div>
+        <div class="text-2xl font-black text-slate-900 mt-0.5">{{ total_products }}</div>
+      </div>
     </div>
-    <div class="bg-white p-6 rounded-2xl border border-gray-200">
-      <div class="text-xs font-semibold text-gray-400 uppercase">Visitors</div>
-      <div class="text-2xl font-extrabold text-indigo-600 mt-2">{{ total_visitors }}</div>
+
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
+        <i class="fa-solid fa-users"></i>
+      </div>
+      <div>
+        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Unique Visitors</div>
+        <div class="text-2xl font-black text-slate-900 mt-0.5">{{ total_visitors }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+      <h3 class="font-bold text-slate-900 text-base">Recent Orders</h3>
+      <a href="{% url 'merchant_orders' %}" class="text-xs font-bold text-purple-600 hover:underline">View All Orders &rarr;</a>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs text-slate-600">
+        <thead class="bg-slate-50 text-slate-400 uppercase text-[10px] font-bold">
+          <tr>
+            <th class="p-4">Order ID</th>
+            <th class="p-4">Customer</th>
+            <th class="p-4">Location</th>
+            <th class="p-4">Amount</th>
+            <th class="p-4">Status</th>
+            <th class="p-4">Date</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for order in recent_orders %}
+          <tr class="hover:bg-slate-50/50">
+            <td class="p-4 font-mono font-bold text-purple-700">{{ order.order_id }}</td>
+            <td class="p-4 font-semibold text-slate-900">{{ order.customer_name }}</td>
+            <td class="p-4">{{ order.district }}</td>
+            <td class="p-4 font-bold text-slate-900">৳ {{ order.total_amount }}</td>
+            <td class="p-4">
+              <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-slate-100 text-slate-700">
+                {{ order.status }}
+              </span>
+            </td>
+            <td class="p-4 text-slate-400">{{ order.created_at|date:"M d, H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="p-8 text-center text-slate-400">No orders placed yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

@@ -1,0 +1,33 @@
+{% extends 'merchant/base_merchant.html' %}
+{% block title %}Customize Theme{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+  <div>
+    <h1 class="text-2xl font-black text-slate-900">Customize Theme & Brand Colors</h1>
+    <p class="text-xs text-slate-400 mt-1">Live branding adjustments and storefront aesthetics</p>
+  </div>
+
+  <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+    <form method="POST" class="space-y-6">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Primary Theme Brand Color</label>
+        <div class="flex items-center gap-3">
+          <input type="color" name="theme_color" value="{{ setting.theme_color }}" id="colorInput" class="w-12 h-12 rounded-xl border p-1 cursor-pointer" oninput="document.getElementById('colorHex').innerText = this.value">
+          <span id="colorHex" class="font-mono text-sm font-bold text-slate-700">{{ setting.theme_color }}</span>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Storefront Mode</label>
+        <select name="theme_mode" class="w-full border rounded-xl px-4 py-2.5 text-xs bg-slate-50 outline-none">
+          <option value="light" {% if setting.theme_mode == 'light' %}selected{% endif %}>Light Mode (Standard)</option>
+          <option value="dark" {% if setting.theme_mode == 'dark' %}selected{% endif %}>Dark Mode (Minimalist)</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-purple px-8 py-3 rounded-xl text-xs font-bold shadow-md">
+        Save Theme Styles
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

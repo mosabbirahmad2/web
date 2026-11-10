@@ -1,99 +1,100 @@
 {% extends 'merchant/base_merchant.html' %}
-{% block title %}Promo Codes - Merchant{% endblock %}
+{% block title %}Promo Codes Control{% endblock %}
 {% block content %}
-<div class="max-w-6xl mx-auto">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Promo Codes</h1>
-        <button onclick="document.getElementById('promoModal').classList.remove('hidden')" class="btn-purple px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
-            <i class="fa-solid fa-ticket text-xs"></i> Create Promo Code
-        </button>
+<div class="max-w-6xl mx-auto space-y-6">
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-black text-slate-900">Promo & Discount Codes</h1>
+      <p class="text-xs text-slate-400 mt-1">Create and manage checkout coupons for campaigns</p>
     </div>
+    <button onclick="document.getElementById('promoModal').classList.remove('hidden')" class="btn-purple px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm">
+      <i class="fa-solid fa-plus"></i> New Promo Code
+    </button>
+  </div>
 
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-        <table class="w-full text-left text-sm text-gray-600">
-            <thead class="bg-gray-50 border-b border-gray-200">
-                <tr class="text-gray-700">
-                    <th class="p-4 font-semibold">Code</th>
-                    <th class="p-4 font-semibold">Discount</th>
-                    <th class="p-4 font-semibold">Expiry Date</th>
-                    <th class="p-4 font-semibold">Usage / Limit</th>
-                    <th class="p-4 font-semibold">Status</th>
-                    <th class="p-4 font-semibold text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-                {% for promo in promos %}
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="p-4">
-                        <span class="font-mono font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded border border-purple-100">{{ promo.code }}</span>
-                    </td>
-                    <td class="p-4 font-medium text-gray-900">{{ promo.discount_percentage }}% OFF</td>
-                    <td class="p-4">{{ promo.expiry_date }}</td>
-                    <td class="p-4">
-                        <div class="flex items-center gap-2">
-                            <span class="font-medium text-gray-800">{{ promo.used_count }}</span>
-                            <span class="text-gray-400">/</span>
-                            <span class="text-gray-500">{{ promo.usage_limit }}</span>
-                        </div>
-                    </td>
-                    <td class="p-4">
-                        {% if promo.is_active %}
-                        <span class="px-2 py-1 text-[10px] font-bold uppercase rounded-full bg-green-100 text-green-600 border border-green-200">Active</span>
-                        {% else %}
-                        <span class="px-2 py-1 text-[10px] font-bold uppercase rounded-full bg-gray-100 text-gray-500 border border-gray-200">Inactive</span>
-                        {% endif %}
-                    </td>
-                    <td class="p-4 text-right space-x-3">
-                        <a href="{% url 'toggle_promo' promo.pk %}" class="text-gray-400 hover:text-indigo-600" title="Toggle Status">
-                            <i class="fa-solid fa-toggle-on {% if promo.is_active %}text-indigo-600{% else %}text-gray-300{% endif %}"></i>
-                        </a>
-                        <a href="{% url 'delete_promo' promo.pk %}" onclick="return confirm('Delete this promo code?')" class="text-gray-400 hover:text-red-600" title="Delete">
-                            <i class="fa-regular fa-trash-can"></i>
-                        </a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="p-8 text-center text-gray-400">No promo codes created yet.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Modal: Create Promo Code -->
-    <div id="promoModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-fade-in">
-            <div class="px-6 py-4 flex justify-between items-center border-b border-gray-100">
-                <h3 class="text-lg font-bold text-gray-900">Create Promo Code</h3>
-                <button onclick="document.getElementById('promoModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl font-light">&times;</button>
-            </div>
-            <form method="POST" class="p-6 space-y-5">
-                {% csrf_token %}
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Promo Code <span class="text-red-500">*</span></label>
-                    <input type="text" name="code" required placeholder="e.g. WELCOME20" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none uppercase">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Discount % <span class="text-red-500">*</span></label>
-                        <input type="number" name="discount" required placeholder="20" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Usage Limit</label>
-                        <input type="number" name="limit" value="100" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Expiry Date <span class="text-red-500">*</span></label>
-                    <input type="date" name="expiry" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
-                </div>
-                <div class="flex gap-3 pt-4 border-t border-gray-100">
-                    <button type="button" onclick="document.getElementById('promoModal').classList.add('hidden')" class="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 btn-purple rounded-lg text-sm font-semibold">Create Code</button>
-                </div>
+  <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+    <table class="w-full text-left text-xs text-slate-600">
+      <thead class="bg-slate-50 text-slate-400 uppercase text-[10px] font-bold border-b">
+        <tr>
+          <th class="p-4">Code</th>
+          <th class="p-4">Discount</th>
+          <th class="p-4">Min Spend</th>
+          <th class="p-4">Expiry</th>
+          <th class="p-4">Status</th>
+          <th class="p-4 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for p in promos %}
+        <tr class="hover:bg-slate-50/50">
+          <td class="p-4 font-mono font-black text-purple-700">{{ p.code }}</td>
+          <td class="p-4 font-bold text-slate-900">
+            {% if p.discount_type == 'percentage' %}{{ p.discount_value }}% OFF{% else %}৳{{ p.discount_value }} Flat{% endif %}
+          </td>
+          <td class="p-4">৳ {{ p.min_purchase|default:"0.00" }}</td>
+          <td class="p-4">{{ p.expiry_date|default:"No Expiry" }}</td>
+          <td class="p-4">
+            <form method="POST" action="{% url 'toggle_promo' p.pk %}" class="inline">
+              {% csrf_token %}
+              <button type="submit" class="text-base {% if p.is_active %}text-emerald-600{% else %}text-slate-300{% endif %}">
+                <i class="fa-solid fa-toggle-on"></i>
+              </button>
             </form>
-        </div>
+          </td>
+          <td class="p-4 text-right">
+            <button type="button" onclick="triggerActionModal('{% url 'delete_promo' p.pk %}', 'Delete coupon {{ p.code }}?')" class="p-1.5 text-slate-400 hover:text-rose-600">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="p-12 text-center text-slate-400">No active promo codes found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="promoModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
+    <div class="flex justify-between items-center border-b pb-3">
+      <h3 class="font-bold text-slate-900 text-base">New Coupon Code</h3>
+      <button onclick="document.getElementById('promoModal').classList.add('hidden')" class="text-slate-400 text-xl">&times;</button>
     </div>
+    <form method="POST" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Coupon Code *</label>
+        <input type="text" name="code" required placeholder="e.g. SUMMER20" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none uppercase font-mono">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Discount Type</label>
+          <select name="discount_type" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+            <option value="percentage">Percentage (%)</option>
+            <option value="fixed">Fixed Amount (৳)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Value *</label>
+          <input type="number" name="discount_value" value="10" required class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Min. Order Total (৳)</label>
+          <input type="number" step="0.01" name="min_purchase" placeholder="0" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Expiry Date</label>
+          <input type="date" name="expiry_date" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('promoModal').classList.add('hidden')" class="flex-1 py-2 border rounded-xl font-bold text-xs">Cancel</button>
+        <button type="submit" class="flex-1 py-2 btn-purple rounded-xl font-bold text-xs shadow-md">Create</button>
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}

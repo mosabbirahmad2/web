@@ -1,64 +1,52 @@
-
 {% extends 'merchant/base_merchant.html' %}
-{% block title %}Site Settings - Fantacy Tech Control{% endblock %}
+{% block title %}Site Settings{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto space-y-6">
   <div>
-    <h1 class="text-2xl font-bold text-gray-800">Site Settings & Contact Controls</h1>
-    <p class="text-xs text-gray-400">এখান থেকে আপনি আপনার ওয়েবসাইটের নাম, ফোন নাম্বার, হোয়াটসঅ্যাপ এবং ঠিকানা পরিবর্তন করতে পারবেন</p>
+    <h1 class="text-2xl font-black text-slate-900">Site Settings & Contact Info</h1>
+    <p class="text-xs text-slate-400 mt-1">Configure your official storefront numbers, address and shipping rates</p>
   </div>
 
-  <div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm">
+  <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
     <form method="POST" class="space-y-6">
       {% csrf_token %}
-
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">ওয়েবসাইটের নাম (Site Brand Name)</label>
-          <input type="text" name="site_name" value="{{ setting.site_name }}" required class="w-full border rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-purple-600 outline-none bg-gray-50">
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Brand Name</label>
+          <input type="text" name="site_name" value="{{ setting.site_name }}" required class="w-full border rounded-xl px-4 py-2.5 text-xs bg-slate-50 outline-none">
         </div>
-
         <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">যোগাযোগের ইমেইল (Contact Email)</label>
-          <input type="email" name="contact_email" value="{{ setting.contact_email }}" required class="w-full border rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-purple-600 outline-none bg-gray-50">
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Helpline Phone</label>
+          <input type="text" name="contact_phone" value="{{ setting.contact_phone }}" required class="w-full border rounded-xl px-4 py-2.5 text-xs bg-slate-50 outline-none">
         </div>
-
         <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">হেল্পলাইন ফোন নম্বর (Phone Number)</label>
-          <input type="text" name="contact_phone" value="{{ setting.contact_phone }}" required class="w-full border rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-purple-600 outline-none bg-gray-50">
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">WhatsApp Number</label>
+          <input type="text" name="whatsapp_number" value="{{ setting.whatsapp_number }}" required class="w-full border rounded-xl px-4 py-2.5 text-xs bg-slate-50 outline-none">
         </div>
-
         <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">WhatsApp নম্বর (Country code সহ)</label>
-          <input type="text" name="whatsapp_number" value="{{ setting.whatsapp_number }}" required class="w-full border rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-purple-600 outline-none bg-gray-50">
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Contact Email</label>
+          <input type="email" name="contact_email" value="{{ setting.contact_email }}" required class="w-full border rounded-xl px-4 py-2.5 text-xs bg-slate-50 outline-none">
         </div>
-
         <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">ঢাকার ভেতরে ডেলিভারি চার্জ (৳)</label>
-          <input type="number" step="0.01" name="delivery_fee_dhaka" value="{{ setting.delivery_fee_dhaka }}" required class="w-full border rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-purple-600 outline-none bg-gray-50">
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Delivery Fee (Inside Dhaka)</label>
+          <input type="number" step="0.01" name="delivery_fee_dhaka" value="{{ setting.delivery_fee_dhaka }}" required class="w-full border rounded-xl px-4 py-2.5 text-xs bg-slate-50 outline-none">
         </div>
-
         <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">ঢাকার বাইরে ডেলিভারি চার্জ (৳)</label>
-          <input type="number" step="0.01" name="delivery_fee_outside" value="{{ setting.delivery_fee_outside }}" required class="w-full border rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-purple-600 outline-none bg-gray-50">
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Delivery Fee (Outside Dhaka)</label>
+          <input type="number" step="0.01" name="delivery_fee_outside" value="{{ setting.delivery_fee_outside }}" required class="w-full border rounded-xl px-4 py-2.5 text-xs bg-slate-50 outline-none">
         </div>
       </div>
-
       <div>
-        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">অফিস / শপের বর্তমান ঠিকানা</label>
-        <textarea name="office_address" rows="2" class="w-full border rounded-xl p-3 text-sm focus:ring-1 focus:ring-purple-600 outline-none bg-gray-50">{{ setting.office_address }}</textarea>
+        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Office / Shop Physical Address</label>
+        <textarea name="office_address" rows="2" class="w-full border rounded-xl p-3 text-xs bg-slate-50 outline-none">{{ setting.office_address }}</textarea>
       </div>
-
       <div>
-        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">চলমান অ্যানাউন্সমেন্ট নোটিশ (Marquee Banner)</label>
-        <textarea name="announcement_notice" rows="2" class="w-full border rounded-xl p-3 text-sm focus:ring-1 focus:ring-purple-600 outline-none bg-gray-50">{{ setting.announcement_notice }}</textarea>
+        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Announcement Notice</label>
+        <textarea name="announcement_notice" rows="2" class="w-full border rounded-xl p-3 text-xs bg-slate-50 outline-none">{{ setting.announcement_notice }}</textarea>
       </div>
-
-      <div class="pt-4 border-t">
-        <button type="submit" class="btn-purple px-8 py-3 rounded-xl font-bold text-sm shadow hover:opacity-95 transition">
-          Save Settings
-        </button>
-      </div>
+      <button type="submit" class="btn-purple px-8 py-3 rounded-xl text-xs font-bold shadow-md">
+        Save Settings
+      </button>
     </form>
   </div>
 </div>

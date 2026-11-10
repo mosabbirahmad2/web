@@ -1,21 +1,20 @@
 from django.contrib import admin
-from .models import Category, Product
+from .models import Category, Product, ProductImage, ProductReview, Order, OrderItem, PromoCode, SiteSetting
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug')
+    list_display = ('name', 'slug', 'is_active', 'order')
     prepopulated_fields = {'slug': ('name',)}
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'price', 'stock', 'created_at')
-    list_filter = ('category',)
+    list_display = ('name', 'category', 'price', 'discount_price', 'stock', 'is_active', 'created_at')
+    list_filter = ('category', 'is_active')
     search_fields = ('name', 'description')
-    # Professional touch: view image in admin
-    readonly_fields = ('get_image_preview',)
 
-    def get_image_preview(self, obj):
-        if obj.image:
-            return obj.image.url
-        return "No Image"
-    get_image_preview.short_description = "Preview"
+admin.site.register(ProductImage)
+admin.site.register(ProductReview)
+admin.site.register(Order)
+admin.site.register(OrderItem)
+admin.site.register(PromoCode)
+admin.site.register(SiteSetting)
