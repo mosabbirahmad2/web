@@ -1,0 +1,25 @@
+{% extends 'merchant/base_merchant.html' %}
+{% block title %}Dashboard - Merchant Control{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+  <h1 class="text-2xl font-bold text-gray-800">Store Overview</h1>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="bg-white p-6 rounded-2xl border border-gray-200">
+      <div class="text-xs font-semibold text-gray-400 uppercase">Total Sales</div>
+      <div class="text-2xl font-extrabold text-green-600 mt-2">৳ {{ total_sales }}</div>
+    </div>
+    <div class="bg-white p-6 rounded-2xl border border-gray-200">
+      <div class="text-xs font-semibold text-gray-400 uppercase">Total Orders</div>
+      <div class="text-2xl font-extrabold text-blue-600 mt-2">{{ total_orders }}</div>
+    </div>
+    <div class="bg-white p-6 rounded-2xl border border-gray-200">
+      <div class="text-xs font-semibold text-gray-400 uppercase">Products</div>
+      <div class="text-2xl font-extrabold text-purple-600 mt-2">{{ total_products }}</div>
+    </div>
+    <div class="bg-white p-6 rounded-2xl border border-gray-200">
+      <div class="text-xs font-semibold text-gray-400 uppercase">Visitors</div>
+      <div class="text-2xl font-extrabold text-indigo-600 mt-2">{{ total_visitors }}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

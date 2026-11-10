@@ -1,0 +1,112 @@
+{% extends 'merchant/base_merchant.html' %}
+{% block title %}Analytics - Merchant Control{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8">
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">Business Intelligence Dashboard</h1>
+        <div class="text-sm text-gray-500">Updated: {% now "jS F Y, H:i" %}</div>
+    </div>
+
+    <!-- Top Level KPIs -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Unique Visitors</span>
+                <i class="fa-solid fa-users text-blue-500"></i>
+            </div>
+            <div class="text-3xl font-black text-gray-900 mt-2">{{ unique_visitors }}</div>
+            <div class="text-xs text-green-600 mt-1 font-medium"><i class="fa-solid fa-arrow-up"></i> Real-time tracking active</div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Orders</span>
+                <i class="fa-solid fa-cart-shopping text-purple-500"></i>
+            </div>
+            <div class="text-3xl font-black text-gray-900 mt-2">{{ total_orders }}</div>
+            <div class="text-xs text-gray-400 mt-1">All time transactions</div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Revenue</span>
+                <i class="fa-solid fa-dollar-sign text-green-500"></i>
+            </div>
+            <div class="text-3xl font-black text-gray-900 mt-2">${{ total_revenue }}</div>
+            <div class="text-xs text-green-600 mt-1 font-medium">Gross earnings</div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Conversion Rate</span>
+                <i class="fa-solid fa-percent text-orange-500"></i>
+            </div>
+            <div class="text-3xl font-black text-gray-900 mt-2">
+                {% if unique_visitors > 0 %}
+                    {{ total_orders|add:0 }} / {{ unique_visitors }}
+                {% else %}
+                0%
+                {% endif %}
+            </div>
+            <div class="text-xs text-gray-400 mt-1">Orders per visitor</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Device Distribution -->
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+            <h3 class="font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-mobile-screen text-purple-600"></i> Device Distribution
+            </h3>
+            <div class="space-y-4">
+                {% for dev in device_stats %}
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-gray-600">{{ dev.device_type }}</span>
+                        <span class="text-gray-900">{{ dev.count }}</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-2">
+                        <div class="bg-purple-600 h-2 rounded-full" style="width: {% if device_stats|length > 0 %}{{ dev.count }}%{% else %}0%{% endif %}"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Top Categories -->
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+            <h3 class="font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-crown text-yellow-500"></i> Top Categories
+            </h3>
+            <div class="space-y-3">
+                {% for cat in category_performance %}
+                <div class="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-bold text-gray-400">#{{ forloop.counter }}</span>
+                        <span class="text-sm font-semibold text-gray-700">{{ cat.name }}</span>
+                    </div>
+                    <span class="text-sm font-bold text-purple-600">{{ cat.total_sold }} sold</span>
+                </div>
+                {% empty %}
+                <p class="text-sm text-gray-400 text-center py-4">No sales data available yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Order Status Distribution -->
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+            <h3 class="font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-green-500"></i> Order Statuses
+            </h3>
+            <div class="space-y-3">
+                {% for stat in status_dist %}
+                <div class="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
+                    <div class="flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full {% if stat.status == 'Delivered' %}bg-green-500{% elif stat.status == 'Cancelled' %}bg-red-500{% else %}bg-blue-500{% endif %}"></span>
+                        <span class="text-sm font-semibold text-gray-700">{{ stat.status }}</span>
+                    </div>
+                    <span class="text-sm font-bold text-gray-900">{{ stat.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Merchant Admin - Zatiqeasy{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .btn-purple { background-color: #5B21B6; color: white; }
+    .btn-purple:hover { background-color: #4C1D95; }
+    .active-nav { background-color: #EDE9FE; color: #5B21B6; font-weight: 600; }
+  </style>
+</head>
+<body class="bg-gray-50 flex h-screen overflow-hidden">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between overflow-y-auto">
+    <div>
+      <div class="h-16 flex items-center px-6 border-b border-gray-100">
+        <span class="text-2xl font-bold tracking-tight text-blue-600 flex items-center gap-2">
+          <i class="fa-solid fa-shapes text-purple-700"></i> zatiq<span class="text-gray-900 font-normal">easy</span>
+        </span>
+      </div>
+      <nav class="p-4 space-y-1 text-sm text-gray-700">
+        <a href="{% url 'merchant_dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 {% if active_menu == 'dashboard' %}active-nav{% endif %}">
+          <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
+        </a>
+        <a href="{% url 'merchant_orders' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 {% if active_menu == 'orders' %}active-nav{% endif %}">
+          <i class="fa-solid fa-cart-shopping w-5"></i> Orders
+        </a>
+        <a href="{% url 'merchant_products' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 {% if active_menu == 'products' %}active-nav{% endif %}">
+          <i class="fa-solid fa-box w-5"></i> Products
+        </a>
+        <a href="{% url 'merchant_categories' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 {% if active_menu == 'categories' %}active-nav{% endif %}">
+          <i class="fa-solid fa-layer-group w-5"></i> Categories
+        </a>
+        <a href="{% url 'merchant_promos' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 {% if active_menu == 'promo' %}active-nav{% endif %}">
+          <i class="fa-solid fa-ticket w-5"></i> Promo Codes
+        </a>
+        <a href="{% url 'merchant_analytics' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 {% if active_menu == 'analytics' %}active-nav{% endif %}">
+          <i class="fa-solid fa-chart-line w-5"></i> Analytics
+        </a>
+      </nav>
+    </div>
+    <!-- Reseller Program removed -->
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="flex-1 flex flex-col overflow-y-auto">
+    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-bars text-gray-500 cursor-pointer text-lg"></i>
+      </div>
+      <div class="flex items-center gap-4">
+        <i class="fa-regular fa-bell text-gray-500 text-lg cursor-pointer"></i>
+        <div class="w-8 h-8 rounded-full bg-purple-700 text-white flex items-center justify-center font-bold text-sm">F</div>
+      </div>
+    </header>
+    <main class="p-8">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

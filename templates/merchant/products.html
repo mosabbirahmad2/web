@@ -1,0 +1,178 @@
+{% extends 'merchant/base_merchant.html' %}
+{% block title %}Products - Merchant{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Product Inventory</h1>
+        <button onclick="document.getElementById('productModal').classList.remove('hidden')" class="btn-purple px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
+            <i class="fa-solid fa-plus text-xs"></i> Add Product
+        </button>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <table class="w-full text-left text-sm text-gray-600">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="p-4 font-semibold text-gray-700">Product</th>
+                    <th class="p-4 font-semibold text-gray-700">Category</th>
+                    <th class="p-4 font-semibold text-gray-700">Price</th>
+                    <th class="p-4 font-semibold text-gray-700">Stock</th>
+                    <th class="p-4 font-semibold text-gray-700 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for product in products %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="p-4 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden border">
+                            {% if product.image %}
+                            <img src="{{ product.image.url }}" class="w-full h-full object-cover">
+                            {% else %}
+                            <i class="fa-regular fa-image text-gray-400 text-xs flex items-center justify-center h-full"></i>
+                            {% endif %}
+                        </div>
+                        <span class="font-medium text-gray-900">{{ product.name }}</span>
+                    </td>
+                    <td class="p-4">{{ product.category.name }}</td>
+                    <td class="p-4">${{ product.price }}</td>
+                    <td class="p-4">{{ product.stock }}</td>
+                    <td class="p-4 text-right space-x-2">
+                        <button class="text-gray-400 hover:text-purple-600"><i class="fa-solid fa-pen"></i></button>
+                        <button class="text-gray-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="p-8 text-center text-gray-400">No products found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal: Add Product -->
+    <div id="productModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 flex justify-between items-center border-b border-gray-100 sticky top-0 bg-white z-10">
+                <h3 class="text-lg font-bold text-gray-900">Add New Product</h3>
+                <button onclick="document.getElementById('productModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl font-light">&times;</button>
+            </div>
+            <form method="POST" action="{% url 'add_product' %}" enctype="multipart/form-data" class="p-6 space-y-6">
+                {% csrf_token %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Left Column: Images -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Main Product Image <span class="text-red-500">*</span></label>
+                            <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer relative" onclick="document.getElementById('main_img').click()">
+                                <i class="fa-regular fa-image text-purple-600 text-3xl mb-2"></i>
+                                <p class="text-xs text-gray-500">Click to upload main image</p>
+                                <input type="file" id="main_img" name="main_image" accept="image/*" class="hidden" required onchange="previewMainImg(this)">
+                                <div id="main_prev" class="mt-2 hidden">
+                                    <img src="" class="h-20 mx-auto rounded shadow-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Gallery Images (Max 6)</label>
+                            <div class="grid grid-cols-3 gap-3">
+                                {% for i in "123456" %}
+                                <div class="aspect-square border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center p-2 text-center hover:bg-gray-50 transition cursor-pointer relative" onclick="document.getElementById('gal_{{forloop.counter}}').click()">
+                                    <i class="fa-regular fa-image text-gray-400 text-lg mb-1"></i>
+                                    <span class="text-[10px] text-gray-400">Img {{forloop.counter}}</span>
+                                    <input type="file" id="gal_{{forloop.counter}}" name="gallery_images" accept="image/*" class="hidden" onchange="previewGalImg(this, 'prev_{{forloop.counter}}')">
+                                    <div id="prev_{{forloop.counter}}" class="absolute inset-0 p-1 hidden">
+                                        <img src="" class="w-full h-full object-cover rounded-lg">
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Details -->
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Product Name <span class="text-red-500">*</span></label>
+                                <input type="text" name="name" required placeholder="e.g. Premium Leather Wallet" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                                <select name="category" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
+                                    <option value="">Select Category</option>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Price ($)</label>
+                                <input type="number" step="0.01" name="price" required placeholder="0.00" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Discount Price ($)</label>
+                                <input type="number" step="0.01" name="discount_price" placeholder="0.00" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Stock Quantity</label>
+                                <input type="number" name="stock" value="20" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Featured Product</label>
+                                <div class="flex items-center mt-2">
+                                    <input type="checkbox" name="is_featured" id="featured" class="w-4 h-4 text-purple-600 border-gray-300 rounded">
+                                    <label for="featured" class="ml-2 text-sm text-gray-600">Highlight on Home Page</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+                            <textarea name="description" rows="4" placeholder="Describe the product features, material, etc..." class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-1 focus:ring-purple-600 outline-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-6 border-t border-gray-100">
+                    <button type="button" onclick="document.getElementById('productModal').classList.add('hidden')" class="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 btn-purple rounded-lg text-sm font-semibold">Create Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function previewMainImg(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const prev = document.getElementById('main_prev');
+                    prev.classList.remove('hidden');
+                    prev.querySelector('img').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function previewGalImg(input, targetId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const prev = document.getElementById(targetId);
+                    prev.classList.remove('hidden');
+                    prev.querySelector('img').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+{% endblock %}

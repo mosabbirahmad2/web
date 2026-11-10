@@ -1,0 +1,39 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-10">
+    <div class="mb-8">
+        <h1 class="text-3xl font-black text-gray-900">{{ category.name }}</h1>
+        <p class="text-gray-500 mt-2">{{ category.short_description }}</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for product in products %}
+        <div class="bg-white rounded-2xl p-4 border border-gray-100 hover:shadow-lg transition group">
+            <div class="aspect-square rounded-xl bg-gray-100 overflow-hidden mb-4 relative">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                {% else %}
+                <i class="fa-solid fa-image text-4xl text-gray-300 absolute inset-0 flex items-center justify-center"></i>
+                {% endif %}
+                {% if product.discount_price %}
+                <span class="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full">SALE</span>
+                {% endif %}
+            </div>
+            <h3 class="font-bold text-gray-800 group-hover:text-purple-600 transition">{{ product.name }}</h3>
+            <div class="flex items-center gap-2 mt-2">
+                <span class="text-lg font-black text-gray-900">${{ product.effective_price }}</span>
+                {% if product.discount_price %}
+                <span class="text-sm text-gray-400 line-through">${{ product.price }}</span>
+                {% endif %}
+            </div>
+            <button class="w-full mt-4 bg-gray-900 text-white py-2 rounded-xl text-sm font-bold hover:bg-purple-600 transition">Add to Cart</button>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-20 text-gray-400">
+            <i class="fa-solid fa-box-open text-5xl mb-4 block"></i>
+            <p>No products found in this category.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

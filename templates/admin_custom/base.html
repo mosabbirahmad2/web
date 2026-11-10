@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zatiq Admin | {{ page_title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fbfbfb; }
+        .sidebar-link {
+            transition: all 0.2s ease;
+            color: #64748b;
+        }
+        .sidebar-link:hover {
+            background-color: #f1f5f9;
+            color: #4f46e5;
+        }
+        .sidebar-link.active {
+            background-color: #eff6ff;
+            color: #4f46e5;
+            border-right: 4px solid #4f46e5;
+        }
+        .zatiq-purple { background-color: #6366f1; }
+        .zatiq-purple-text { color: #6366f1; }
+        .zatiq-border { border-color: #e2e8f0; }
+        .badge-new {
+            background-color: #6366f1;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+    <div id="app-container" class="flex w-full h-full">
+        <!-- Zatiq Sidebar -->
+        <aside id="mainSidebar" class="w-64 bg-white border-r zatiq-border flex flex-col shrink-0 transition-all duration-300">
+            <div class="p-6 flex items-center space-x-2">
+                <div class="w-8 h-8 zatiq-purple rounded-lg flex items-center justify-center text-white">
+                    <i class="fa-solid fa-z text-lg font-bold"></i>
+                </div>
+                <span class="text-xl font-bold text-slate-800 tracking-tight">zatiq<span class="text-indigo-500">easy</span></span>
+            </div>
+
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                <div class="px-3 mb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Main Menu</div>
+
+                <a href="/dashboard/" class="sidebar-link {% if page == 'dashboard' %}active{% endif %} flex items-center space-x-3 p-3 rounded-lg font-medium">
+                    <i class="fa-solid fa-grip text-sm w-5"></i> <span class="nav-text">Dashboard</span>
+                </a>
+                <a href="/admin-orders/" class="sidebar-link {% if page == 'orders' %}active{% endif %} flex items-center space-x-3 p-3 rounded-lg font-medium">
+                    <i class="fa-solid fa-cart-shopping text-sm w-5"></i> <span class="nav-text">Orders</span>
+                </a>
+                <a href="/admin-products/" class="sidebar-link {% if page == 'products' %}active{% endif %} flex items-center space-x-3 p-3 rounded-lg font-medium">
+                    <i class="fa-solid fa-box text-sm w-5"></i> <span class="nav-text">Products</span>
+                </a>
+                <a href="/admin-categories/" class="sidebar-link {% if page == 'categories' %}active{% endif %} flex items-center space-x-3 p-3 rounded-lg font-medium">
+                    <i class="fa-solid fa-tags text-sm w-5"></i> <span class="nav-text">Categories</span>
+                </a>
+                <a href="/admin-customers/" class="sidebar-link {% if page == 'customers' %}active{% endif %} flex items-center space-x-3 p-3 rounded-lg font-medium">
+                    <i class="fa-solid fa-users text-sm w-5"></i> <span class="nav-text">Customers</span>
+                </a>
+
+                <div class="px-3 mt-6 mb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Shop & Growth</div>
+
+                <a href="/admin-analytics/" class="sidebar-link {% if page == 'analytics' %}active{% endif %} flex items-center space-x-3 p-3 rounded-lg font-medium">
+                    <i class="fa-solid fa-chart-line text-sm w-5"></i> <span class="nav-text">Analytics</span>
+                </a>
+                <a href="/admin-promo/" class="sidebar-link {% if page == 'promo' %}active{% endif %} flex items-center space-x-3 p-3 rounded-lg font-medium">
+                    <i class="fa-solid fa-ticket text-sm w-5"></i> <span class="nav-text">Promo Codes</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-16 bg-white border-b zatiq-border flex items-center justify-between px-8 shrink-0">
+                <div class="flex items-center space-x-4">
+                    <button id="sidebarToggle" class="md:hidden text-slate-500 hover:text-slate-800 transition"><i class="fa-solid fa-bars"></i></button>
+                    <div class="w-0 h-6 bg-slate-200 rounded-full"></div>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <button id="notifToggle" class="text-slate-400 hover:text-slate-600 transition relative">
+                        <i class="fa-solid fa-bell text-lg"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold rounded-full h-3 w-3 flex items-center justify-center">3</span>
+                    </button>
+                    <div class="flex items-center space-x-3 pl-4 border-l zatiq-border">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-xs font-bold text-slate-800">Admin User</p>
+                            <p class="text-[10px] text-slate-500">Super Admin</p>
+                        </div>
+                        <a href="/logout/" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-red-50 hover:text-red-500 transition">
+                            <i class="fa-solid fa-sign-out-alt text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto bg-slate-50">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Notifications Dropdown -->
+    <div id="notifDropdown" class="fixed top-16 right-8 w-80 bg-white border zatiq-border rounded-2xl shadow-xl hidden z-[100] overflow-hidden">
+        <div class="p-4 border-b zatiq-border font-bold text-sm text-slate-800">Notifications</div>
+        <div class="max-h-96 overflow-y-auto">
+            <div class="p-4 border-b zatiq-border hover:bg-slate-50 cursor-pointer transition">
+                <p class="text-xs font-bold text-slate-800">New Order #1002</p>
+                <p class="text-[10px] text-slate-500">2 minutes ago</p>
+            </div>
+            <div class="p-4 border-b zatiq-border hover:bg-slate-50 cursor-pointer transition">
+                <p class="text-xs font-bold text-slate-800">Low Stock: Leather Case</p>
+                <p class="text-[10px] text-slate-500">1 hour ago</p>
+            </div>
+        </div>
+        <div class="p-3 text-center bg-slate-50">
+            <a href="#" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800">Mark all as read</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('sidebarToggle').onclick = () => {
+            const sidebar = document.getElementById('mainSidebar');
+            sidebar.classList.toggle('-ml-64');
+        };
+
+        document.getElementById('notifToggle').onclick = (e) => {
+            e.stopPropagation();
+            document.getElementById('notifDropdown').classList.toggle('hidden');
+        };
+
+        window.onclick = () => {
+            document.getElementById('notifDropdown').classList.add('hidden');
+        };
+        document.getElementById('notifToggle').onclick = (e) => e.stopPropagation();
+    </script>
+</body>
