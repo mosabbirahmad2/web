@@ -37,8 +37,8 @@
                     <td class="p-4">${{ product.price }}</td>
                     <td class="p-4">{{ product.stock }}</td>
                     <td class="p-4 text-right space-x-2">
-                        <button class="text-gray-400 hover:text-purple-600"><i class="fa-solid fa-pen"></i></button>
-                        <button class="text-gray-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>
+                        <a href="{% url 'merchant_edit_product' product.pk %}" class="text-gray-400 hover:text-purple-600 p-1 inline-block" title="Edit"><i class="fa-solid fa-pen"></i></a>
+                        <a href="{% url 'merchant_delete_product' product.pk %}" onclick="return confirm('Delete product {{ product.name|escapejs }}?')" class="text-gray-400 hover:text-red-600 p-1 inline-block" title="Delete"><i class="fa-regular fa-trash-can"></i></a>
                     </td>
                 </tr>
                 {% empty %}
@@ -175,4 +175,75 @@
             }
         }
     </script>
+
+    {% if edit_product %}
+    <div id="editProductModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 flex justify-between items-center border-b border-gray-100 sticky top-0 bg-white z-10">
+                <h3 class="text-lg font-bold text-gray-900">Edit Product: {{ edit_product.name }}</h3>
+                <a href="{% url 'merchant_products' %}" class="text-gray-400 hover:text-gray-600 text-xl font-light">&times;</a>
+            </div>
+            <form method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Main Product Image</label>
+                        <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer relative" onclick="document.getElementById('edit_main_img').click()">
+                            {% if edit_product.image %}
+                            <img src="{{ edit_product.image.url }}" class="h-28 mx-auto rounded shadow-sm mb-2">
+                            {% endif %}
+                            <p class="text-xs text-gray-500">Click to change main image</p>
+                            <input type="file" id="edit_main_img" name="main_image" accept="image/*" class="hidden">
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Product Name *</label>
+                            <input type="text" name="name" required value="{{ edit_product.name }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Category *</label>
+                            <select name="category" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
+                                {% for cat in categories %}
+                                <option value="{{ cat.pk }}" {% if cat.pk == edit_product.category.pk %}selected{% endif %}>{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Price ($)</label>
+                                <input type="number" step="0.01" name="price" required value="{{ edit_product.price }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Discount Price ($)</label>
+                                <input type="number" step="0.01" name="discount_price" value="{{ edit_product.discount_price|default:'' }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Stock Quantity</label>
+                                <input type="number" name="stock" value="{{ edit_product.stock }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-600 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Featured</label>
+                                <div class="flex items-center mt-2">
+                                    <input type="checkbox" name="is_featured" id="edit_featured" {% if edit_product.is_featured %}checked{% endif %} class="w-4 h-4 text-purple-600 border-gray-300 rounded">
+                                    <label for="edit_featured" class="ml-2 text-sm text-gray-600">Highlight</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+                            <textarea name="description" rows="3" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-1 focus:ring-purple-600 outline-none">{{ edit_product.description }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-6 border-t border-gray-100">
+                    <a href="{% url 'merchant_products' %}" class="flex-1 py-2.5 text-center border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50">Cancel</a>
+                    <button type="submit" class="flex-1 py-2.5 btn-purple rounded-lg text-sm font-semibold">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
 {% endblock %}

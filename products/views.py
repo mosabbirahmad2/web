@@ -1,7 +1,35 @@
+import csv
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Sum
+from django.http import HttpResponse
 from .models import Category, Product, Order, AnalyticsEvent, ProductImage, PromoCode
+
+# --- AUTHENTICATION VIEWS ---
+def admin_login_view(request):
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect('merchant_dashboard')
+
+    if request.method == 'POST':
+        u = request.POST.get('username', '').strip()
+        p = request.POST.get('password', '').strip()
+        user = authenticate(request, username=u, password=p)
+        if user is not None and user.is_staff:
+            login(request, user)
+            messages.success(request, f'Welcome back, {user.username}!')
+            next_url = request.GET.get('next') or 'merchant_dashboard'
+            return redirect(next_url)
+        else:
+            messages.error(request, 'Invalid username or password. Please try again.')
+
+    return render(request, 'admin_custom/login.html')
+
+def admin_logout_view(request):
+    logout(request)
+    messages.info(request, 'You have been successfully logged out.')
+    return redirect('admin_login')
 
 # --- CUSTOMER VIEWS (NO ADMIN LINK HERE) ---
 def home_view(request):
@@ -19,7 +47,17 @@ def shop_category_view(request, slug):
     products = Product.objects.filter(category=category, is_active=True)
     return render(request, 'shop/category_products.html', {'category': category, 'products': products})
 
+def product_detail_view(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    product.views_count += 1
+    product.save(update_fields=['views_count'])
+    return render(request, 'shop/category_products.html', {
+        'category': product.category,
+        'products': [product]
+    })
+
 # --- MERCHANT ADMIN VIEWS (ZATIQEASY STYLE) ---
+@login_required(login_url='admin_login')
 def merchant_dashboard(request):
     total_sales = Order.objects.filter(status='Delivered').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     total_orders = Order.objects.count()
@@ -36,6 +74,7 @@ def merchant_dashboard(request):
         'active_menu': 'dashboard',
     })
 
+@login_required(login_url='admin_login')
 def merchant_categories(request):
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
@@ -64,6 +103,7 @@ def merchant_categories(request):
         'active_menu': 'categories',
     })
 
+@login_required(login_url='admin_login')
 def merchant_category_detail(request, pk):
     category = get_object_or_404(Category, pk=pk)
 
@@ -115,12 +155,14 @@ def merchant_category_detail(request, pk):
         'active_menu': 'categories',
     })
 
+@login_required(login_url='admin_login')
 def merchant_toggle_category(request, pk):
     cat = get_object_or_404(Category, pk=pk)
     cat.is_active = not cat.is_active
     cat.save()
     return redirect(request.META.get('HTTP_REFERER', 'merchant_categories'))
 
+@login_required(login_url='admin_login')
 def merchant_delete_category(request, pk):
     cat = get_object_or_404(Category, pk=pk)
     parent_id = cat.parent.pk if cat.parent else None
@@ -130,6 +172,7 @@ def merchant_delete_category(request, pk):
         return redirect('merchant_category_detail', pk=parent_id)
     return redirect('merchant_categories')
 
+@login_required(login_url='admin_login')
 def merchant_analytics(request):
     # 1. Basic Metrics
     unique_visitors = AnalyticsEvent.objects.values('ip_address').distinct().count()
@@ -139,10 +182,7 @@ def merchant_analytics(request):
     total_revenue = Order.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     total_orders = Order.objects.count()
 
-    # 3. Top Performing Categories (by order quantity)
-    # This assumes you have a way to track which products were in which orders
-    # Since OrderItem exists, we can use it
-    from .models import OrderItem
+    # 3. Top Performing Categories
     category_performance = Category.objects.annotate(
         total_sold=Count('products__orderitem')
     ).order_by('-total_sold')[:5]
@@ -160,13 +200,44 @@ def merchant_analytics(request):
         'active_menu': 'analytics',
     })
 
+@login_required(login_url='admin_login')
 def merchant_orders(request):
+    status_filter = request.GET.get('status', '').strip()
+    search_query = request.GET.get('q', '').strip()
     orders = Order.objects.all().order_by('-created_at')
+
+    if status_filter and status_filter != 'All Orders':
+        orders = orders.filter(status=status_filter)
+    if search_query:
+        orders = orders.filter(order_id__icontains=search_query) | orders.filter(customer_phone__icontains=search_query)
+
     return render(request, 'merchant/orders.html', {
         'orders': orders,
         'active_menu': 'orders',
+        'status_filter': status_filter,
+        'search_query': search_query,
     })
 
+@login_required(login_url='admin_login')
+def export_orders_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="orders.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['Order ID', 'Customer Name', 'Phone', 'Address', 'Total Amount', 'Status', 'Date'])
+
+    for order in Order.objects.all().order_by('-created_at'):
+        writer.writerow([
+            order.order_id,
+            order.customer_name,
+            order.customer_phone,
+            order.shipping_address,
+            order.total_amount,
+            order.status,
+            order.created_at.strftime('%Y-%m-%d %H:%M')
+        ])
+    return response
+
+@login_required(login_url='admin_login')
 def update_order_status(request, pk):
     if request.method == 'POST':
         order = get_object_or_404(Order, pk=pk)
@@ -177,6 +248,7 @@ def update_order_status(request, pk):
             messages.success(request, f'Order {order.order_id} updated to {status}.')
     return redirect('merchant_orders')
 
+@login_required(login_url='admin_login')
 def merchant_promos(request):
     if request.method == 'POST':
         code = request.POST.get('code', '').strip().upper()
@@ -202,27 +274,41 @@ def merchant_promos(request):
         'active_menu': 'promo',
     })
 
+@login_required(login_url='admin_login')
 def toggle_promo(request, pk):
     promo = get_object_or_404(PromoCode, pk=pk)
     promo.is_active = not promo.is_active
     promo.save()
     return redirect('merchant_promos')
 
+@login_required(login_url='admin_login')
 def delete_promo(request, pk):
     promo = get_object_or_404(PromoCode, pk=pk)
     promo.delete()
     messages.success(request, 'Promo code deleted successfully!')
     return redirect('merchant_promos')
 
+@login_required(login_url='admin_login')
 def merchant_products(request):
-    products = Product.objects.all()
+    search_query = request.GET.get('q', '').strip()
+    category_id = request.GET.get('category', '').strip()
+    products = Product.objects.all().order_by('-created_at')
+
+    if search_query:
+        products = products.filter(name__icontains=search_query)
+    if category_id:
+        products = products.filter(category_id=category_id)
+
     categories = Category.objects.all()
     return render(request, 'merchant/products.html', {
         'products': products,
         'categories': categories,
         'active_menu': 'products',
+        'search_query': search_query,
+        'selected_category': category_id,
     })
 
+@login_required(login_url='admin_login')
 def add_product(request):
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
@@ -230,11 +316,12 @@ def add_product(request):
         description = request.POST.get('description', '').strip()
         price = request.POST.get('price')
         discount_price = request.POST.get('discount_price')
-        stock = request.POST.get('stock')
+        stock = request.POST.get('stock', 20)
+        is_featured = bool(request.POST.get('is_featured'))
         main_image = request.FILES.get('main_image')
         gallery_images = request.FILES.getlist('gallery_images')
 
-        if name and category_id:
+        if name and category_id and price:
             category = get_object_or_404(Category, pk=category_id)
             product = Product.objects.create(
                 name=name,
@@ -243,16 +330,72 @@ def add_product(request):
                 price=price,
                 discount_price=discount_price if discount_price else None,
                 stock=stock,
+                is_featured=is_featured,
                 image=main_image
             )
 
-            # Save up to 6 gallery images
+            # Save gallery images
             for img in gallery_images[:6]:
-                ProductImage.objects.create(product=product, image=img)
+                if img:
+                    ProductImage.objects.create(product=product, image=img)
 
             messages.success(request, f'Product "{name}" created successfully!')
         else:
             messages.error(request, 'Please fill in all required fields.')
 
         return redirect('merchant_products')
+    return redirect('merchant_products')
+
+@login_required(login_url='admin_login')
+def merchant_edit_product(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    categories = Category.objects.all()
+
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        category_id = request.POST.get('category')
+        description = request.POST.get('description', '').strip()
+        price = request.POST.get('price')
+        discount_price = request.POST.get('discount_price')
+        stock = request.POST.get('stock')
+        is_featured = bool(request.POST.get('is_featured'))
+
+        if name and category_id and price:
+            product.name = name
+            product.category = get_object_or_404(Category, pk=category_id)
+            product.description = description
+            product.price = price
+            product.discount_price = discount_price if discount_price else None
+            if stock:
+                product.stock = int(stock)
+            product.is_featured = is_featured
+
+            if 'main_image' in request.FILES:
+                product.image = request.FILES['main_image']
+
+            product.save()
+
+            new_gallery = request.FILES.getlist('gallery_images')
+            for img in new_gallery[:6]:
+                if img:
+                    ProductImage.objects.create(product=product, image=img)
+
+            messages.success(request, f'Product "{product.name}" updated successfully!')
+            return redirect('merchant_products')
+        else:
+            messages.error(request, 'Please fill in required fields.')
+
+    return render(request, 'merchant/products.html', {
+        'products': Product.objects.all().order_by('-created_at'),
+        'categories': categories,
+        'edit_product': product,
+        'active_menu': 'products',
+    })
+
+@login_required(login_url='admin_login')
+def merchant_delete_product(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    name = product.name
+    product.delete()
+    messages.success(request, f'Product "{name}" deleted successfully!')
     return redirect('merchant_products')

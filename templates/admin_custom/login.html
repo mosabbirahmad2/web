@@ -36,7 +36,16 @@
         </div>
 
         <div class="bg-white/10 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl border border-white/10">
-            <form method="POST" action="/django-admin/login/" class="space-y-6">
+            {% if messages %}
+            <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                <div class="p-3 bg-red-500/20 border border-red-500/50 text-red-200 text-xs rounded-xl text-center font-medium">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <form method="POST" action="{% url 'admin_login' %}" class="space-y-6">
                 {% csrf_token %}
                 <div class="group">
                     <label class="block text-sm font-medium text-slate-300 mb-2 ml-1 transition-colors group-focus-within:text-indigo-400">Username</label>

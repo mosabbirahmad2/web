@@ -50,16 +50,39 @@
   <div class="flex-1 flex flex-col overflow-y-auto">
     <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
       <div class="flex items-center gap-3">
-        <i class="fa-solid fa-bars text-gray-500 cursor-pointer text-lg"></i>
+        <i id="sidebarToggle" class="fa-solid fa-bars text-gray-500 cursor-pointer text-lg hover:text-purple-700 transition"></i>
       </div>
-      <div class="flex items-center gap-4">
-        <i class="fa-regular fa-bell text-gray-500 text-lg cursor-pointer"></i>
-        <div class="w-8 h-8 rounded-full bg-purple-700 text-white flex items-center justify-center font-bold text-sm">F</div>
+      <div class="flex items-center gap-6">
+        <div class="text-right hidden sm:block">
+          <p class="text-xs font-bold text-gray-800">{{ request.user.username|title|default:"Admin" }}</p>
+          <p class="text-[10px] text-gray-400">Store Merchant</p>
+        </div>
+        <a href="{% url 'admin_logout' %}" title="Logout" class="w-9 h-9 rounded-full bg-red-50 text-red-600 flex items-center justify-center font-bold text-sm hover:bg-red-100 transition">
+          <i class="fa-solid fa-power-off text-xs"></i>
+        </a>
       </div>
     </header>
     <main class="p-8">
+      {% if messages %}
+      <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="p-4 rounded-xl text-sm font-medium {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
       {% block content %}{% endblock %}
     </main>
   </div>
+  <script>
+    const toggleBtn = document.getElementById('sidebarToggle');
+    if (toggleBtn) {
+      toggleBtn.onclick = () => {
+        const aside = document.querySelector('aside');
+        aside.classList.toggle('hidden');
+      };
+    }
+  </script>
 </body>
 </html>

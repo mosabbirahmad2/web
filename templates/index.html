@@ -3,74 +3,409 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Elite Commerce - Premium Shopping Experience</title>
+  <title>{% block title %}Elite Store - Premium Shopping Experience{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .cart-drawer {
+      transition: transform 0.3s ease-in-out;
+    }
+    .cart-hidden {
+      transform: translateX(100%);
+    }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
-  <!-- Public Header (NO ADMIN LINK) -->
-  <header class="bg-white sticky top-0 z-40 border-b border-gray-100 shadow-sm">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+
+  <!-- Cart Drawer -->
+  <div id="cartDrawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 cart-drawer cart-hidden flex flex-col">
+    <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-bag-shopping text-purple-600"></i>
+        <h2 class="text-lg font-bold text-gray-900">Your Shopping Bag</h2>
+      </div>
+      <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-700 text-xl p-1" title="Close Bag">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div id="cartItemsContainer" class="flex-1 p-6 overflow-y-auto space-y-4">
+      <!-- Items dynamically populated via JS -->
+      <div class="text-center text-gray-400 py-12">
+        <i class="fa-solid fa-cart-arrow-down text-4xl mb-3 text-gray-300 block"></i>
+        <p>Your bag is currently empty.</p>
+      </div>
+    </div>
+
+    <div class="p-6 border-t border-gray-100 bg-gray-50 space-y-4">
+      <div class="flex justify-between items-center text-base font-bold text-gray-900">
+        <span>Subtotal</span>
+        <span id="cartTotalPrice">$0.00</span>
+      </div>
+      <button onclick="handleCheckout()" class="w-full bg-purple-600 text-white py-3.5 rounded-xl font-bold hover:bg-purple-700 transition shadow-lg shadow-purple-600/20">
+        Checkout Now
+      </button>
+    </div>
+  </div>
+
+  <!-- Search Modal -->
+  <div id="searchModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center pt-24 px-4">
+    <div class="bg-white rounded-2xl w-full max-w-xl p-6 shadow-2xl animate-fade-in relative">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-gray-800">Search Products</h3>
+        <button onclick="toggleSearch()" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+      </div>
+      <div class="relative">
+        <input type="text" id="searchInput" placeholder="Search phone covers, key rings..." class="w-full border border-gray-300 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-purple-600 outline-none" oninput="filterLocalProducts(this.value)">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-gray-400"></i>
+      </div>
+      <div id="searchResults" class="mt-4 max-h-60 overflow-y-auto space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- Cart Backdrop -->
+  <div id="cartBackdrop" class="hidden fixed inset-0 bg-black/40 z-40 transition-opacity" onclick="toggleCart()"></div>
+
+  <!-- Public Header (Storefront) -->
+  <header class="bg-white sticky top-0 z-30 border-b border-gray-100 shadow-sm">
     <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
       <a href="/" class="text-2xl font-black text-gray-900 tracking-tight">ELITE<span class="text-purple-600">STORE</span></a>
       <nav class="hidden md:flex items-center gap-8 font-medium text-sm text-gray-600">
         <a href="/" class="text-purple-600 font-semibold">Home</a>
-        <a href="#categories" class="hover:text-purple-600">Categories</a>
-        <a href="#featured" class="hover:text-purple-600">Featured</a>
-        <a href="#deals" class="hover:text-purple-600">Flash Deals</a>
+        <a href="/#categories" class="hover:text-purple-600 transition">Categories</a>
+        <a href="/#featured" class="hover:text-purple-600 transition">Featured</a>
+        <a href="/#deals" class="hover:text-purple-600 transition">Flash Deals</a>
       </nav>
       <div class="flex items-center gap-5">
-        <i class="fa-solid fa-magnifying-glass text-gray-500 cursor-pointer"></i>
-        <div class="relative cursor-pointer">
-          <i class="fa-solid fa-bag-shopping text-gray-700 text-lg"></i>
-          <span class="absolute -top-2 -right-2 bg-purple-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
-        </div>
+        <button onclick="toggleSearch()" class="text-gray-500 hover:text-purple-600 transition p-1" title="Search">
+          <i class="fa-solid fa-magnifying-glass text-lg"></i>
+        </button>
+        <button onclick="toggleCart()" class="relative text-gray-700 hover:text-purple-600 transition p-1" title="Shopping Bag">
+          <i class="fa-solid fa-bag-shopping text-xl"></i>
+          <span id="cartCountBadge" class="absolute -top-2 -right-2 bg-purple-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="max-w-7xl mx-auto px-6 py-12">
-    <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-800 rounded-3xl p-12 text-white flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
-      <div class="space-y-6 max-w-lg">
-        <span class="px-3 py-1 bg-purple-500/30 text-purple-200 text-xs font-semibold rounded-full uppercase tracking-wider">New Collection 2026</span>
-        <h1 class="text-4xl md:text-5xl font-black leading-tight">Elevate Your Lifestyle with Modern Elegance</h1>
-        <p class="text-purple-200 text-sm">Discover top quality verified products with ultra-fast delivery and full purchase protection.</p>
-        <a href="#featured" class="inline-block bg-white text-purple-900 px-8 py-3.5 rounded-full font-bold text-sm hover:bg-purple-50 transition shadow-lg">Explore Now</a>
-      </div>
-      <div class="w-72 h-72 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
-        <i class="fa-solid fa-gem text-7xl text-purple-300 animate-pulse"></i>
-      </div>
-    </div>
-  </section>
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMessage" class="text-sm font-medium">Added to bag!</span>
+  </div>
 
-  <!-- Categories Grid -->
-  <section id="categories" class="max-w-7xl mx-auto px-6 py-10">
-    <h2 class="text-2xl font-black text-gray-900 mb-8">Shop by Categories</h2>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-      {% for cat in categories %}
-      <a href="{% url 'shop_category' cat.slug %}" class="group bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition flex flex-col items-center text-center">
-        <div class="w-24 h-24 rounded-full bg-purple-50 flex items-center justify-center overflow-hidden mb-4 group-hover:scale-105 transition">
-          {% if cat.image %}
-            <img src="{{ cat.image.url }}" class="w-full h-full object-cover">
-          {% else %}
-            <i class="fa-solid fa-shapes text-3xl text-purple-500"></i>
-          {% endif %}
+  <main class="flex-1">
+  {% block content %}
+    <!-- Hero Section -->
+    <section class="max-w-7xl mx-auto px-6 py-12">
+      <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-800 rounded-3xl p-10 md:p-14 text-white flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
+        <div class="space-y-6 max-w-lg">
+          <span class="px-3.5 py-1.5 bg-purple-500/30 text-purple-200 text-xs font-semibold rounded-full uppercase tracking-wider border border-purple-400/20">New Collection 2026</span>
+          <h1 class="text-4xl md:text-5xl font-black leading-tight">Elevate Your Lifestyle with Modern Elegance</h1>
+          <p class="text-purple-200 text-sm md:text-base leading-relaxed">Discover top quality verified accessories with ultra-fast delivery and satisfaction guaranteed.</p>
+          <div class="flex flex-wrap gap-4 pt-2">
+            <a href="#featured" class="inline-block bg-white text-purple-900 px-8 py-3.5 rounded-full font-bold text-sm hover:bg-purple-50 transition shadow-lg">Explore Now</a>
+            <a href="#categories" class="inline-block bg-white/10 text-white px-8 py-3.5 rounded-full font-bold text-sm hover:bg-white/20 transition border border-white/20">All Categories</a>
+          </div>
         </div>
-        <h3 class="font-bold text-gray-800 text-base group-hover:text-purple-600">{{ cat.name }}</h3>
-        <p class="text-xs text-gray-400 mt-1">{{ cat.subcategories.count }} Sub categories</p>
-      </a>
-      {% empty %}
-      <div class="col-span-4 text-center py-10 text-gray-400">No categories added yet.</div>
-      {% endfor %}
-    </div>
-  </section>
+        <div class="w-64 h-64 md:w-80 md:h-80 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-2xl">
+          <i class="fa-solid fa-gem text-7xl md:text-8xl text-purple-300 animate-pulse"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- Categories Grid -->
+    <section id="categories" class="max-w-7xl mx-auto px-6 py-10">
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h2 class="text-2xl font-black text-gray-900">Shop by Categories</h2>
+          <p class="text-xs text-gray-500 mt-1">Browse our handpicked curated categories</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {% for cat in categories %}
+        <a href="{% url 'shop_category' cat.slug %}" class="group bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center hover:-translate-y-1">
+          <div class="w-24 h-24 rounded-full bg-purple-50 flex items-center justify-center overflow-hidden mb-4 group-hover:scale-105 transition duration-300">
+            {% if cat.image %}
+              <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover">
+            {% else %}
+              <i class="fa-solid fa-shapes text-3xl text-purple-500"></i>
+            {% endif %}
+          </div>
+          <h3 class="font-bold text-gray-800 text-base group-hover:text-purple-600 transition">{{ cat.name }}</h3>
+          <p class="text-xs text-gray-400 mt-1">{{ cat.subcategories.count }} Sub categories</p>
+        </a>
+        {% empty %}
+        <div class="col-span-full text-center py-10 text-gray-400">No categories added yet.</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Featured Products Section -->
+    <section id="featured" class="max-w-7xl mx-auto px-6 py-10">
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h2 class="text-2xl font-black text-gray-900">Featured Products</h2>
+          <p class="text-xs text-gray-500 mt-1">Most loved items chosen by our curators</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for product in featured_products %}
+        <div class="bg-white rounded-2xl p-4 border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+          <div>
+            <div class="aspect-square rounded-xl bg-gray-100 overflow-hidden mb-4 relative">
+              <a href="{% url 'product_detail' product.pk %}">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center text-gray-300">
+                  <i class="fa-solid fa-image text-4xl"></i>
+                </div>
+                {% endif %}
+              </a>
+              {% if product.discount_price %}
+              <span class="absolute top-2.5 right-2.5 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow">SALE</span>
+              {% endif %}
+              <span class="absolute top-2.5 left-2.5 bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase shadow">Featured</span>
+            </div>
+            <a href="{% url 'product_detail' product.pk %}" class="block font-bold text-gray-800 hover:text-purple-600 transition text-sm mb-1 line-clamp-1">
+              {{ product.name }}
+            </a>
+            <p class="text-xs text-gray-400 mb-3 line-clamp-2">{{ product.description }}</p>
+          </div>
+
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-lg font-black text-gray-900">${{ product.effective_price }}</span>
+              {% if product.discount_price %}
+              <span class="text-xs text-gray-400 line-through">${{ product.price }}</span>
+              {% endif %}
+            </div>
+            <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="w-full bg-gray-900 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-purple-600 transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-plus text-[10px]"></i> Add to Bag
+            </button>
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12 text-gray-400">
+          <i class="fa-solid fa-box-open text-4xl mb-3 block text-gray-300"></i>
+          No featured products available at the moment.
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Flash Deals / Latest Products Section -->
+    <section id="deals" class="max-w-7xl mx-auto px-6 py-10 mb-12">
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h2 class="text-2xl font-black text-gray-900">Latest Drops</h2>
+          <p class="text-xs text-gray-500 mt-1">Freshly stocked premium accessories</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for product in latest_products %}
+        <div class="bg-white rounded-2xl p-4 border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+          <div>
+            <div class="aspect-square rounded-xl bg-gray-100 overflow-hidden mb-4 relative">
+              <a href="{% url 'product_detail' product.pk %}">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center text-gray-300">
+                  <i class="fa-solid fa-image text-4xl"></i>
+                </div>
+                {% endif %}
+              </a>
+              {% if product.discount_price %}
+              <span class="absolute top-2.5 right-2.5 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow">SALE</span>
+              {% endif %}
+            </div>
+            <a href="{% url 'product_detail' product.pk %}" class="block font-bold text-gray-800 hover:text-purple-600 transition text-sm mb-1 line-clamp-1">
+              {{ product.name }}
+            </a>
+            <p class="text-xs text-gray-400 mb-3 line-clamp-2">{{ product.description }}</p>
+          </div>
+
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-lg font-black text-gray-900">${{ product.effective_price }}</span>
+              {% if product.discount_price %}
+              <span class="text-xs text-gray-400 line-through">${{ product.price }}</span>
+              {% endif %}
+            </div>
+            <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="w-full bg-gray-900 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-purple-600 transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-plus text-[10px]"></i> Add to Bag
+            </button>
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12 text-gray-400">
+          <i class="fa-solid fa-store-slash text-4xl mb-3 block text-gray-300"></i>
+          No products found.
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endblock %}
+  </main>
 
   <!-- Footer -->
-  <footer class="bg-gray-900 text-gray-400 text-sm py-12 mt-20">
-    <div class="max-w-7xl mx-auto px-6 text-center">
-      <p class="font-bold text-white text-lg mb-2">ELITE STORE</p>
-      <p>© 2026 Elite Store. All rights reserved. Ultra-secure shopping.</p>
+  <footer class="bg-gray-900 text-gray-400 text-sm py-12 mt-auto border-t border-gray-800">
+    <div class="max-w-7xl mx-auto px-6 text-center space-y-4">
+      <p class="font-black text-white text-xl tracking-tight">ELITE<span class="text-purple-500">STORE</span></p>
+      <p class="text-xs text-gray-400">Defining elegance and utility with modern accessories.</p>
+      <div class="flex justify-center gap-6 text-lg text-gray-400 pt-2">
+        <a href="#" class="hover:text-white transition"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" class="hover:text-white transition"><i class="fa-brands fa-twitter"></i></a>
+        <a href="#" class="hover:text-white transition"><i class="fa-brands fa-facebook"></i></a>
+      </div>
+      <div class="pt-6 border-t border-gray-800 text-xs text-gray-500">
+        &copy; 2026 Elite Store. All rights reserved. Ultra-secure shopping.
+      </div>
     </div>
   </footer>
+
+  <!-- Client-side Shopping Bag & Search Script -->
+  <script>
+    let cart = JSON.parse(localStorage.getItem('elite_cart') || '[]');
+
+    function saveCart() {
+      localStorage.setItem('elite_cart', JSON.stringify(cart));
+      renderCartUI();
+    }
+
+    function toggleCart() {
+      const drawer = document.getElementById('cartDrawer');
+      const backdrop = document.getElementById('cartBackdrop');
+      drawer.classList.toggle('cart-hidden');
+      backdrop.classList.toggle('hidden');
+    }
+
+    function toggleSearch() {
+      const modal = document.getElementById('searchModal');
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        document.getElementById('searchInput').focus();
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2200);
+    }
+
+    function addToBag(id, name, price, img) {
+      const existing = cart.find(item => item.id === id);
+      if (existing) {
+        existing.qty = (existing.qty || 1) + 1;
+      } else {
+        cart.push({ id, name, price: parseFloat(price), img: img || '', qty: 1 });
+      }
+      saveCart();
+      showToast(`Added "${name}" to bag!`);
+    }
+
+    function updateQty(index, delta) {
+      if (cart[index]) {
+        cart[index].qty = (cart[index].qty || 1) + delta;
+        if (cart[index].qty <= 0) {
+          cart.splice(index, 1);
+        }
+        saveCart();
+      }
+    }
+
+    function removeFromBag(index) {
+      cart.splice(index, 1);
+      saveCart();
+    }
+
+    function renderCartUI() {
+      const countBadge = document.getElementById('cartCountBadge');
+      const container = document.getElementById('cartItemsContainer');
+      const totalSpan = document.getElementById('cartTotalPrice');
+
+      const totalItems = cart.reduce((acc, item) => acc + (item.qty || 1), 0);
+      countBadge.innerText = totalItems;
+
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div class="text-center text-gray-400 py-16">
+            <i class="fa-solid fa-cart-arrow-down text-4xl mb-3 text-gray-300 block"></i>
+            <p class="font-medium text-sm">Your bag is currently empty.</p>
+          </div>
+        `;
+        totalSpan.innerText = '$0.00';
+        return;
+      }
+
+      let total = 0;
+      let html = '';
+      cart.forEach((item, idx) => {
+        const itemTotal = item.price * (item.qty || 1);
+        total += itemTotal;
+        html += `
+          <div class="flex items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-100">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-white border border-gray-200 overflow-hidden flex items-center justify-center shrink-0">
+                ${item.img ? `<img src="${item.img}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-box text-gray-300"></i>`}
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-gray-800 line-clamp-1">${item.name}</h4>
+                <div class="text-xs font-bold text-purple-600 mt-0.5">$${item.price.toFixed(2)}</div>
+                <div class="flex items-center gap-2 mt-1">
+                  <button onclick="updateQty(${idx}, -1)" class="w-5 h-5 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xs font-bold">-</button>
+                  <span class="text-xs font-bold text-gray-700">${item.qty || 1}</span>
+                  <button onclick="updateQty(${idx}, 1)" class="w-5 h-5 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xs font-bold">+</button>
+                </div>
+              </div>
+            </div>
+            <button onclick="removeFromBag(${idx})" class="text-gray-400 hover:text-red-500 p-2 transition" title="Remove">
+              <i class="fa-regular fa-trash-can text-sm"></i>
+            </button>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      totalSpan.innerText = `$${total.toFixed(2)}`;
+    }
+
+    function handleCheckout() {
+      if (cart.length === 0) {
+        alert("Your bag is empty! Add some items first.");
+        return;
+      }
+      alert(`Order processed! Total: ${document.getElementById('cartTotalPrice').innerText}. Thank you for shopping with us!`);
+      cart = [];
+      saveCart();
+      toggleCart();
+    }
+
+    function filterLocalProducts(query) {
+      const resultsContainer = document.getElementById('searchResults');
+      if (!query || query.trim().length === 0) {
+        resultsContainer.innerHTML = '';
+        return;
+      }
+      // Simple product search UI feedback
+      resultsContainer.innerHTML = `
+        <div class="p-3 text-xs text-gray-500">
+          Searching for "<span class="font-bold text-purple-600">${query}</span>"...
+          <div class="mt-2 text-gray-400">Browse categories or product grids to view all matching items.</div>
+        </div>
+      `;
+    }
+
+    // Initialize cart on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCartUI();
+    });
+  </script>
 </body>
 </html>

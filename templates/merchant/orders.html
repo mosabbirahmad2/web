@@ -5,32 +5,32 @@
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Order Management</h1>
         <div class="flex items-center gap-3">
-            <button class="bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition flex items-center gap-2">
+            <a href="{% url 'export_orders_csv' %}" class="bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition flex items-center gap-2">
                 <i class="fa-solid fa-download text-xs"></i> Export CSV
-            </button>
+            </a>
         </div>
     </div>
 
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-        <div class="p-4 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
+        <div class="p-4 border-b border-gray-100 bg-gray-50">
+            <form method="GET" class="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                         <i class="fa-solid fa-magnifying-glass text-xs"></i>
                     </span>
-                    <input type="text" placeholder="Search Order ID or Phone..." class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-purple-600 outline-none w-64">
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search Order ID or Phone..." class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-purple-600 outline-none w-64">
                 </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500 font-medium">Filter by Status:</span>
-                <select class="text-xs border border-gray-300 rounded-lg px-2 py-1 outline-none">
-                    <option>All Orders</option>
-                    <option>Pending</option>
-                    <option>Processing</option>
-                    <option>Delivered</option>
-                    <option>Cancelled</option>
-                </select>
-            </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500 font-medium">Filter by Status:</span>
+                    <select name="status" onchange="this.form.submit()" class="text-xs border border-gray-300 rounded-lg px-2 py-1 outline-none bg-white">
+                        <option value="" {% if not status_filter %}selected{% endif %}>All Orders</option>
+                        <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Processing" {% if status_filter == 'Processing' %}selected{% endif %}>Processing</option>
+                        <option value="Delivered" {% if status_filter == 'Delivered' %}selected{% endif %}>Delivered</option>
+                        <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+            </form>
         </div>
 
         <div class="overflow-x-auto">
