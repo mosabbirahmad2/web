@@ -29,7 +29,7 @@ def get_client_ip(request):
         return x_forwarded.split(',')[0].strip()
     return request.META.get('REMOTE_ADDR')
 
-# --- AUTHENTICATION (GRANULAR IP + USERNAME LOCKOUT) ---
+# --- AUTHENTICATION ---
 def admin_login_view(request):
     if request.user.is_authenticated and request.user.is_staff:
         return redirect('merchant_dashboard')
@@ -48,7 +48,7 @@ def admin_login_view(request):
             remaining = attempt.locked_until - timezone.now()
             hours = int(remaining.total_seconds() // 3600)
             mins = int((remaining.total_seconds() % 3600) // 60)
-            messages.error(request, f"Security Alert: Your access is locked out for {hours}h {mins}m.")
+            messages.error(request, f"Security Alert: Locked out for {hours}h {mins}m.")
             return render(request, 'admin_custom/login.html', {'locked': True})
 
         user = authenticate(request, username=u, password=p)
@@ -74,22 +74,24 @@ def admin_logout_view(request):
     logout(request)
     return redirect('admin_login')
 
-# --- STOREFRONT VIEWS ---
+# --- STOREFRONT ---
 def home_view(request):
     ip = get_client_ip(request)
     today = timezone.now().date()
     UniqueVisitorLog.objects.get_or_create(ip_address=ip, date=today)
 
     categories = Category.objects.filter(is_active=True, parent__isnull=True).prefetch_related('subcategories')
-    showcase_sections = ShowcaseSection.objects.filter(is_active=True).prefetch_related(
-        'products__category'
-    )
-    
-    # Exclude expired showcase sections
+    showcase_sections = ShowcaseSection.objects.filter(is_active=True).prefetch_related('products__category')
     valid_sections = [s for s in showcase_sections if not s.is_expired()]
 
-    # Homepage all products with pagination
+    search_query = request.GET.get('q', '').strip()
     products_list = Product.objects.filter(is_active=True).select_related('category').order_by('-created_at')
+
+    if search_query:
+        products_list = products_list.filter(
+            Q(name__icontains=search_query) | Q(description__icontains=search_query)
+        )
+
     paginator = Paginator(products_list, 20)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
@@ -98,6 +100,7 @@ def home_view(request):
         'categories': categories,
         'showcase_sections': valid_sections,
         'products': page_obj,
+        'search_query': search_query,
     })
 
 def shop_category_view(request, slug):
@@ -106,7 +109,7 @@ def shop_category_view(request, slug):
     products = Product.objects.filter(
         Q(category=category) | Q(category__id__in=sub_ids),
         is_active=True
-    ).distinct().select_related('category')
+    ).distinct().select_related('category').order_by('-created_at')
 
     paginator = Paginator(products, 24)
     page_obj = paginator.get_page(request.GET.get('page', 1))
@@ -117,7 +120,10 @@ def shop_category_view(request, slug):
     })
 
 def product_detail_view(request, pk):
-    product = get_object_or_404(Product.objects.select_related('category').prefetch_related('images', 'reviews'), pk=pk)
+    product = get_object_or_404(
+        Product.objects.select_related('category').prefetch_related('images', 'reviews'), 
+        pk=pk
+    )
     product.views_count += 1
     product.save(update_fields=['views_count'])
 
@@ -145,7 +151,39 @@ def add_product_review(request, pk):
         messages.success(request, 'Thank you! Your review has been added.')
     return redirect('product_detail', pk=pk)
 
-# --- SECURE APIS (CSRF PROTECTED & VALIDATED) ---
+# --- REAL LIVE SEARCH API ---
+def search_api(request):
+    q = request.GET.get('q', '').strip()
+    if not q or len(q) < 2:
+        return JsonResponse({'results': []})
+
+    # Log query in background
+    try:
+        SearchQuery.objects.create(query=q, ip_address=get_client_ip(request))
+    except Exception:
+        pass
+
+    matches = Product.objects.filter(
+        Q(name__icontains=q) | Q(description__icontains=q),
+        is_active=True
+    ).select_related('category')[:8]
+
+    data = []
+    for p in matches:
+        data.append({
+            'id': p.id,
+            'name': p.name,
+            'price': str(p.price),
+            'effective_price': str(p.effective_price),
+            'stock': p.stock,
+            'image': p.image.url if p.image else None,
+            'badge': p.badge_tag or '',
+            'url': f'/product/{p.id}/'
+        })
+
+    return JsonResponse({'results': data})
+
+# --- CHECKOUT & PROMO APIS ---
 @require_POST
 def apply_promo_api(request):
     try:
@@ -195,7 +233,6 @@ def log_event_api(request):
 
 @require_POST
 def place_order_api(request):
-    # Cooldown rate-limit protection: 1 order per 5 seconds per IP
     ip = get_client_ip(request)
     cache_key = f"order_cooldown_{ip}"
     if cache.get(cache_key):
@@ -218,7 +255,6 @@ def place_order_api(request):
         is_dhaka = (district.lower() == 'dhaka')
         delivery_fee = setting.delivery_fee_dhaka if is_dhaka else setting.delivery_fee_outside
 
-        # ATOMIC TRANSACTION WITH ROW-LEVEL LOCKING & SERVER-SIDE PRICE/STOCK RE-VALIDATION
         with transaction.atomic():
             subtotal = Decimal('0.00')
             validated_items = []
@@ -229,7 +265,6 @@ def place_order_api(request):
                 if qty <= 0:
                     return JsonResponse({'status': 'error', 'message': 'Invalid product quantity.'}, status=400)
 
-                # Row-level lock to prevent concurrent overselling race conditions
                 prod = Product.objects.select_for_update().filter(id=prod_id, is_active=True).first()
                 if not prod:
                     return JsonResponse({'status': 'error', 'message': f'Product ID {prod_id} is no longer available.'}, status=400)
@@ -240,12 +275,10 @@ def place_order_api(request):
                         'message': f'Insufficient stock for "{prod.name}". Only {prod.stock} unit(s) left.'
                     }, status=400)
 
-                # Re-validate price directly from database
                 item_price = prod.effective_price
                 subtotal += (Decimal(str(item_price)) * qty)
                 validated_items.append((prod, qty, item_price))
 
-            # Validate Promo Code if provided
             discount_amount = Decimal('0.00')
             applied_promo = None
             if promo_code_str:
@@ -257,7 +290,6 @@ def place_order_api(request):
 
             total_amount = max(Decimal('0.00'), subtotal - discount_amount) + Decimal(str(delivery_fee))
 
-            # Create Order
             order = Order.objects.create(
                 customer_name=name,
                 customer_phone=phone,
@@ -272,7 +304,6 @@ def place_order_api(request):
                 total_amount=total_amount
             )
 
-            # Create Order Items and Deduct Stock safely
             for prod, qty, price in validated_items:
                 OrderItem.objects.create(
                     order=order,
@@ -284,14 +315,12 @@ def place_order_api(request):
                 prod.stock -= qty
                 prod.save(update_fields=['stock'])
 
-            # Log Analytics Event
             AnalyticsEvent.objects.create(
                 ip_address=ip,
                 path='/checkout/success',
                 event_type='order_completed'
             )
 
-            # Set cooldown for IP
             cache.set(cache_key, True, timeout=5)
 
             return JsonResponse({
@@ -303,7 +332,7 @@ def place_order_api(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
-# --- MERCHANT ADMIN VIEWS ---
+# --- MERCHANT ADMIN ---
 @login_required(login_url='admin_login')
 def merchant_dashboard(request):
     total_sales = Order.objects.filter(status='Delivered').aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
@@ -650,7 +679,7 @@ def merchant_delete_section(request, pk):
     messages.success(request, 'Section deleted successfully!')
     return redirect('merchant_sections')
 
-# Settings & Customizer
+# Settings & Theme Customizer
 @login_required(login_url='admin_login')
 def merchant_settings(request):
     setting = SiteSetting.get_settings()
@@ -683,7 +712,7 @@ def merchant_customize_theme(request):
 
     return render(request, 'merchant/customize_theme.html', {'setting': setting, 'active_menu': 'themes'})
 
-# Analytics Engine with Visual Chart.js Data
+# Analytics
 @login_required(login_url='admin_login')
 def merchant_analytics(request):
     period = request.GET.get('period', '7d').lower()
@@ -709,7 +738,7 @@ def merchant_analytics(request):
         start_time = now - timedelta(days=30)
         trunc_fn = TruncDate
         date_format = '%b %d'
-    else:  # 7d default
+    else:
         start_time = now - timedelta(days=7)
         trunc_fn = TruncDate
         date_format = '%b %d'
@@ -730,27 +759,22 @@ def merchant_analytics(request):
     visitor_to_purchase_rate = round((all_orders / unique_visitors * 100), 1) if unique_visitors > 0 else 0.0
     abandoned_carts = max(0, add_to_cart_events - all_orders)
 
-    # 1. Traffic Chart (Unique visitors over time)
     traffic_qs = UniqueVisitorLog.objects.filter(created_at__gte=start_time).annotate(t=trunc_fn('created_at')).values('t').annotate(c=Count('id')).order_by('t')
     chart_labels = [item['t'].strftime(date_format) for item in traffic_qs]
     chart_data = [item['c'] for item in traffic_qs]
 
-    # 2. Revenue & Orders Over Time
     rev_qs = Order.objects.filter(status='Delivered', created_at__gte=start_time).annotate(t=trunc_fn('created_at')).values('t').annotate(total=Sum('total_amount')).order_by('t')
     rev_labels = [item['t'].strftime(date_format) for item in rev_qs]
     rev_data = [float(item['total']) for item in rev_qs]
 
-    # 3. Order Status Distribution (Pie Chart)
     status_qs = Order.objects.filter(created_at__gte=start_time).values('status').annotate(count=Count('id'))
     status_labels = [s['status'] for s in status_qs]
     status_data = [s['count'] for s in status_qs]
 
-    # 4. Device and Browser Breakdown (From AnalyticsEvent)
     device_qs = AnalyticsEvent.objects.filter(timestamp__gte=start_time).values('device_type').annotate(c=Count('id'))
     device_labels = [d['device_type'] or 'Desktop' for d in device_qs]
     device_data = [d['c'] for d in device_qs]
 
-    # 5. Top Viewed & Ordered Products
     clicked_products = Product.objects.filter(views_count__gt=0).order_by('-views_count')[:6]
     clicked_labels = [p.name[:16] for p in clicked_products]
     clicked_data = [p.views_count for p in clicked_products]
@@ -759,12 +783,6 @@ def merchant_analytics(request):
     order_labels = [item['product_name'][:16] if item['product_name'] else 'Item' for item in ordered_items]
     order_data = [item['qty'] for item in ordered_items]
 
-    # 6. Districts
-    districts = Order.objects.filter(created_at__gte=start_time).values('district').annotate(c=Count('id')).order_by('-c')[:6]
-    district_labels = [d['district'] for d in districts]
-    district_data = [d['c'] for d in districts]
-
-    # 7. Sales Funnel Data
     funnel_labels = ['Unique Visitors', 'Product Views', 'Add to Cart', 'Checkout Started', 'Orders Completed']
     funnel_data = [unique_visitors, product_views, add_to_cart_events, checkout_starts, completed_orders]
 
@@ -783,7 +801,6 @@ def merchant_analytics(request):
         'visitor_to_purchase_rate': visitor_to_purchase_rate,
         'abandoned_carts': abandoned_carts,
         
-        # Charts JSON
         'chart_labels': json.dumps(chart_labels),
         'chart_data': json.dumps(chart_data),
         'rev_labels': json.dumps(rev_labels),
@@ -796,8 +813,6 @@ def merchant_analytics(request):
         'clicked_data': json.dumps(clicked_data),
         'order_labels': json.dumps(order_labels),
         'order_data': json.dumps(order_data),
-        'district_labels': json.dumps(district_labels),
-        'district_data': json.dumps(district_data),
         'funnel_labels': json.dumps(funnel_labels),
         'funnel_data': json.dumps(funnel_data),
         'active_menu': 'analytics',

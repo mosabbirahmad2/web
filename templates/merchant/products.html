@@ -12,7 +12,6 @@
     </button>
   </div>
 
-  <!-- Search & Bulk Update Bar -->
   <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
     <form method="GET" class="relative w-full md:w-80">
       <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search products..." class="w-full border rounded-xl pl-9 pr-4 py-2 text-xs bg-slate-50 focus:outline-none focus:border-purple-600">
@@ -101,10 +100,24 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Pagination Controls (Preserving Query and Category Params) -->
+    {% if products.has_other_pages %}
+    <div class="p-4 border-t flex justify-between items-center text-xs text-slate-500">
+      <span>Page {{ products.number }} of {{ products.paginator.num_pages }}</span>
+      <div class="flex gap-1">
+        {% if products.has_previous %}
+        <a href="?page={{ products.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" class="px-3 py-1.5 border rounded-lg hover:bg-slate-50 font-bold">&larr; Prev</a>
+        {% endif %}
+        {% if products.has_next %}
+        <a href="?page={{ products.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" class="px-3 py-1.5 border rounded-lg hover:bg-slate-50 font-bold">Next &rarr;</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
 
-<!-- Modal: Add Product with Image Validation -->
 <div id="productModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
   <div class="bg-white rounded-3xl w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto space-y-4">
     <div class="flex justify-between items-center border-b pb-3">
@@ -144,7 +157,7 @@
       </div>
 
       <div>
-        <label class="block text-xs font-bold text-slate-700 mb-1">Main Image (JPG, PNG, WebP &le; 5MB)</label>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Main Image</label>
         <input type="file" name="main_image" accept="image/*" class="w-full text-xs text-slate-500 border rounded-xl p-2 bg-slate-50">
       </div>
 

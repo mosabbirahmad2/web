@@ -6,7 +6,12 @@ class AnalyticsMiddleware:
 
     def __call__(self, request):
         path = request.path
-        if not path.startswith('/static/') and not path.startswith('/media/') and not path.startswith('/django-admin/'):
+        # Exclude static, media, default admin AND custom merchant admin to avoid polluting client analytics!
+        if (not path.startswith('/static/') and 
+            not path.startswith('/media/') and 
+            not path.startswith('/django-admin/') and 
+            not path.startswith('/mosabbiradmin/')):
+            
             ua = request.META.get('HTTP_USER_AGENT', '')
             ip = request.META.get('HTTP_X_FORWARDED_FOR')
             if ip:

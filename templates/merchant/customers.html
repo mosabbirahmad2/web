@@ -2,9 +2,15 @@
 {% block title %}Customers Directory{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto space-y-6">
-  <div>
-    <h1 class="text-2xl font-black text-slate-900">Customers Directory</h1>
-    <p class="text-xs text-slate-400 mt-1">Insights on recurring clients, order counts and total spent</p>
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+      <h1 class="text-2xl font-black text-slate-900">Customers Directory</h1>
+      <p class="text-xs text-slate-400 mt-1">Insights on recurring clients, order counts and total spent</p>
+    </div>
+    <form method="GET" class="relative w-full sm:w-72">
+      <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search customer or phone..." class="w-full border rounded-xl pl-9 pr-4 py-2 text-xs bg-slate-50 focus:outline-none focus:border-purple-600">
+      <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+    </form>
   </div>
 
   <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
@@ -30,6 +36,20 @@
         {% endfor %}
       </tbody>
     </table>
+
+    {% if customers.has_other_pages %}
+    <div class="p-4 border-t flex justify-between items-center text-xs text-slate-500">
+      <span>Page {{ customers.number }} of {{ customers.paginator.num_pages }}</span>
+      <div class="flex gap-1">
+        {% if customers.has_previous %}
+        <a href="?page={{ customers.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 border rounded-lg hover:bg-slate-50 font-bold">&larr; Prev</a>
+        {% endif %}
+        {% if customers.has_next %}
+        <a href="?page={{ customers.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 border rounded-lg hover:bg-slate-50 font-bold">Next &rarr;</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

@@ -1,0 +1,444 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ site_setting.site_name }} - Premium Accessories{% endblock %}</title>
+  <meta name="description" content="Shop premium mobile cases, key rings and luxury accessories online in Bangladesh with Cash on Delivery!">
+  <meta property="og:title" content="{{ site_setting.site_name }}">
+  <meta property="og:description" content="Premium mobile covers & key rings in Bangladesh.">
+  
+  <!-- Preconnect and Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Compiled Tailwind CSS & FontAwesome Icons -->
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .bg-theme { background-color: {{ site_setting.theme_color|default:"#5C3214" }}; }
+    .text-theme { color: {{ site_setting.theme_color|default:"#5C3214" }}; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-[#FAF9F5] text-slate-900 flex flex-col min-h-screen">
+
+  <!-- Top Helpline & WhatsApp Bar -->
+  <div class="bg-white border-b border-slate-100 text-xs py-2 px-4 sm:px-8">
+    <div class="max-w-7xl mx-auto flex justify-between items-center text-slate-600">
+      <div class="flex items-center gap-4">
+        <span><i class="fa-solid fa-phone text-amber-900 mr-1"></i> Helpline: <strong>{{ site_setting.contact_phone }}</strong></span>
+        {% if site_setting.whatsapp_number %}
+        <a href="https://wa.me/{{ site_setting.whatsapp_number }}" target="_blank" class="text-emerald-600 font-bold hover:underline flex items-center gap-1">
+          <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp ({{ site_setting.whatsapp_username|default:site_setting.whatsapp_number }})
+        </a>
+        {% endif %}
+      </div>
+      <div class="hidden sm:flex items-center gap-5 text-[11px] text-slate-500 font-medium">
+        <span><i class="fa-solid fa-shield-halved text-emerald-600"></i> Verified Quality</span>
+        <span><i class="fa-solid fa-truck-fast text-purple-600"></i> Cash on Delivery Nationwide</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Header with REAL Working Live Search -->
+  <header class="bg-white sticky top-0 z-40 border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
+      <a href="/" class="flex items-center gap-1.5 shrink-0">
+        <span class="text-2xl sm:text-3xl font-black italic tracking-tighter text-slate-900 uppercase">
+          {{ site_setting.site_name }}<span class="text-xs not-italic font-bold align-super text-amber-900">™</span>
+        </span>
+      </a>
+
+      <!-- Real Live Search Bar -->
+      <div class="relative flex-1 max-w-xl mx-2">
+        <form action="/" method="GET" class="relative flex items-center">
+          <input type="text" name="q" id="storeSearch" value="{{ search_query|default:'' }}" autocomplete="off" oninput="handleLiveSearch(this.value)" placeholder="Search phone covers, key rings..." class="w-full h-11 pl-11 pr-4 rounded-full border border-slate-300 text-xs focus:outline-none focus:border-slate-900 bg-slate-50">
+          <button type="submit" class="absolute left-4 text-slate-400 text-xs hover:text-slate-900">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+        </form>
+        <!-- Live Search Dropdown -->
+        <div id="searchDropdown" class="hidden absolute left-0 right-0 top-12 bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden divide-y divide-slate-100 max-h-96 overflow-y-auto"></div>
+      </div>
+
+      <!-- Bag Button -->
+      <button onclick="toggleCart()" class="relative w-11 h-11 rounded-full border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-800 hover:bg-slate-100 transition shadow-sm shrink-0">
+        <i class="fa-solid fa-bag-shopping text-sm"></i>
+        <span id="cartCountBadge" class="absolute -top-1 -right-1 bg-slate-900 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+      </button>
+    </div>
+
+    <!-- Category Strip -->
+    <div class="bg-white border-t border-slate-100 px-4 sm:px-6">
+      <div class="max-w-7xl mx-auto flex items-center gap-3 py-2 overflow-x-auto text-xs font-bold whitespace-nowrap">
+        <a href="/#all-products-section" class="bg-amber-100/70 text-amber-900 px-3.5 py-1.5 rounded-xl shrink-0">ALL PRODUCTS</a>
+        {% for cat in global_categories %}
+        <a href="{% url 'shop_category' cat.slug %}" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition shrink-0">
+          {{ cat.name }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </header>
+
+  <!-- CSS-Based Announcement Ticker -->
+  {% if site_setting.announcement_notice %}
+  <div class="bg-white border-b border-slate-200 py-2 overflow-hidden relative">
+    <div class="max-w-7xl mx-auto px-4 flex items-center gap-3 text-xs font-semibold text-slate-700">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping shrink-0"></span>
+      <div class="overflow-hidden w-full">
+        <span class="animate-marquee">📢 {{ site_setting.announcement_notice }}</span>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Page Content -->
+  <main class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Cart Drawer -->
+  <div id="cartDrawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 cart-drawer cart-hidden flex flex-col">
+    <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-[#FAF9F5]">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-bag-shopping text-amber-900"></i>
+        <h2 class="text-base font-bold text-slate-900">Your Shopping Bag</h2>
+      </div>
+      <button onclick="toggleCart()" class="text-slate-400 hover:text-black text-xl p-1">&times;</button>
+    </div>
+    <div id="cartItemsContainer" class="flex-1 p-5 overflow-y-auto space-y-3"></div>
+    <div class="p-5 border-t border-slate-100 bg-[#FAF9F5] space-y-3">
+      <div class="flex justify-between items-center text-sm font-bold">
+        <span>Items Subtotal</span><span id="cartTotalPrice">৳ 0</span>
+      </div>
+      <button onclick="openCheckoutModal()" class="w-full bg-[#5C3214] text-white py-3.5 rounded-2xl font-bold text-xs shadow-lg hover:opacity-95 transition">
+        Proceed to Checkout &rarr;
+      </button>
+    </div>
+  </div>
+  <div id="cartBackdrop" class="hidden fixed inset-0 bg-slate-900/60 z-40 transition-opacity" onclick="toggleCart()"></div>
+
+  <!-- Cash on Delivery Checkout Modal with Working Promo -->
+  <div id="checkoutModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-base">Cash on Delivery Order</h3>
+        <button onclick="closeCheckoutModal()" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+      </div>
+
+      <form id="checkoutForm" onsubmit="handlePlaceOrder(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+          <input type="text" id="co_name" required placeholder="e.g. Mosabbir Ahmad" class="w-full border rounded-xl px-4 py-2 text-xs bg-slate-50 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Mobile Number *</label>
+          <input type="text" id="co_phone" required placeholder="017xxxxxxxx" class="w-full border rounded-xl px-4 py-2 text-xs bg-slate-50 outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">District *</label>
+            <select id="co_district" required onchange="handleDistrictChange(this.value)" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+              <option value="Dhaka" selected>Dhaka</option>
+              <option value="Chittagong">Chittagong</option>
+              <option value="Sylhet">Sylhet</option>
+              <option value="Rajshahi">Rajshahi</option>
+              <option value="Khulna">Khulna</option>
+              <option value="Barisal">Barisal</option>
+              <option value="Rangpur">Rangpur</option>
+              <option value="Gazipur">Gazipur</option>
+              <option value="Other">Other Location</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Thana / Area</label>
+            <input type="text" id="co_thana" placeholder="e.g. Mirpur, Dhanmondi" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Full Street Address *</label>
+          <textarea id="co_address" required rows="2" placeholder="House, Road, Area, Landmark" class="w-full border rounded-xl p-3 text-xs bg-slate-50 outline-none"></textarea>
+        </div>
+
+        <div class="flex gap-2 pt-1">
+          <input type="text" id="promoInput" placeholder="Coupon Code (e.g. SAVE10)" class="flex-1 border rounded-xl px-3 py-2 text-xs uppercase font-mono bg-slate-50 outline-none">
+          <button type="button" onclick="applyPromoCode()" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-black">Apply</button>
+        </div>
+        <div id="promoMsg" class="text-[11px] font-bold"></div>
+
+        <div class="p-4 bg-amber-50/70 border border-amber-200/60 rounded-2xl text-xs space-y-1.5 font-semibold text-slate-800">
+          <div class="flex justify-between"><span>Items Subtotal:</span><span id="summary_prod_price">৳ 0</span></div>
+          <div class="flex justify-between text-emerald-700"><span>Coupon Discount:</span><span id="summary_discount">- ৳ 0</span></div>
+          <div class="flex justify-between"><span>Delivery Fee:</span><span id="summary_del_charge">৳ 70</span></div>
+          <div class="border-t border-amber-200 pt-1.5 flex justify-between text-sm font-black text-amber-900">
+            <span>Total Payable:</span><span id="summary_total_bill">৳ 0</span>
+          </div>
+        </div>
+
+        <button type="submit" id="submitOrderBtn" class="w-full py-3.5 bg-[#5C3214] text-white rounded-2xl font-bold text-xs hover:opacity-95 transition shadow-lg">
+          Confirm Order (Cash on Delivery)
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-slate-950 text-slate-400 text-xs py-10 mt-16 border-t border-slate-800 text-center space-y-2">
+    <p class="font-black text-white text-lg tracking-wider uppercase">{{ site_setting.site_name }}</p>
+    <p>{{ site_setting.office_address }} | Helpline: {{ site_setting.contact_phone }}</p>
+    <p class="text-slate-600">&copy; 2026 {{ site_setting.site_name }}. All Rights Reserved.</p>
+  </footer>
+
+  <script>
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    let cart = JSON.parse(localStorage.getItem('fantacy_cart') || '[]');
+    let currentDiscount = 0;
+    let appliedPromoCode = '';
+    const feeDhaka = parseFloat("{{ site_setting.delivery_fee_dhaka|default:70 }}");
+    const feeOutside = parseFloat("{{ site_setting.delivery_fee_outside|default:130 }}");
+    let deliveryFee = feeDhaka;
+
+    function saveCart() {
+      localStorage.setItem('fantacy_cart', JSON.stringify(cart));
+      renderCartUI();
+    }
+    function toggleCart() {
+      document.getElementById('cartDrawer').classList.toggle('cart-hidden');
+      document.getElementById('cartBackdrop').classList.toggle('hidden');
+    }
+    function addToBag(id, name, price, img) {
+      const existing = cart.find(i => i.id === id);
+      if (existing) { existing.qty += 1; }
+      else { cart.push({ id, name, price: parseFloat(price), img: img || '', qty: 1 }); }
+      saveCart();
+      toggleCart();
+
+      fetch('/api/log-event/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+        body: JSON.stringify({ event_type: 'add_to_cart', product_id: id })
+      });
+    }
+    function updateQty(idx, delta) {
+      if (cart[idx]) {
+        cart[idx].qty += delta;
+        if (cart[idx].qty <= 0) cart.splice(idx, 1);
+        saveCart();
+      }
+    }
+    function removeCartItem(idx) {
+      cart.splice(idx, 1);
+      saveCart();
+    }
+    function renderCartUI() {
+      const badge = document.getElementById('cartCountBadge');
+      if (badge) badge.innerText = cart.reduce((a, b) => a + b.qty, 0);
+      const container = document.getElementById('cartItemsContainer');
+      const totalSpan = document.getElementById('cartTotalPrice');
+      if (!container || !totalSpan) return;
+
+      if (cart.length === 0) {
+        container.innerHTML = `<div class="text-center py-16 text-slate-400 text-xs">Your shopping bag is empty</div>`;
+        totalSpan.innerText = '৳ 0';
+        return;
+      }
+      let total = 0, html = '';
+      cart.forEach((item, idx) => {
+        total += (item.price * item.qty);
+        html += `
+          <div class="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-slate-50 border overflow-hidden shrink-0 flex items-center justify-center">
+                ${item.img ? `<img src="${item.img}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-box text-slate-300"></i>`}
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-slate-800 line-clamp-1">${item.name}</h4>
+                <div class="text-xs font-black text-slate-900 mt-0.5">৳ ${item.price}</div>
+                <div class="flex items-center gap-2 mt-1">
+                  <button onclick="updateQty(${idx}, -1)" class="w-5 h-5 rounded bg-slate-100 text-xs font-bold">-</button>
+                  <span class="text-xs font-bold">${item.qty}</span>
+                  <button onclick="updateQty(${idx}, 1)" class="w-5 h-5 rounded bg-slate-100 text-xs font-bold">+</button>
+                </div>
+              </div>
+            </div>
+            <button onclick="removeCartItem(${idx})" class="text-slate-400 hover:text-rose-500 p-2"><i class="fa-regular fa-trash-can"></i></button>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+      totalSpan.innerText = `৳ ${total}`;
+    }
+    function handleDistrictChange(dist) {
+      deliveryFee = (dist.toLowerCase() === 'dhaka') ? feeDhaka : feeOutside;
+      updateBillSummary();
+    }
+    function updateBillSummary() {
+      const prodTotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+      const prodElem = document.getElementById('summary_prod_price');
+      const discElem = document.getElementById('summary_discount');
+      const feeElem = document.getElementById('summary_del_charge');
+      const totalElem = document.getElementById('summary_total_bill');
+
+      if (prodElem) prodElem.innerText = `৳ ${prodTotal}`;
+      if (discElem) discElem.innerText = `- ৳ ${currentDiscount}`;
+      if (feeElem) feeElem.innerText = `৳ ${deliveryFee}`;
+      if (totalElem) totalElem.innerText = `৳ ${Math.max(0, prodTotal - currentDiscount) + deliveryFee}`;
+    }
+    function openCheckoutModal() {
+      if (cart.length === 0) { alert('Your bag is empty!'); return; }
+      updateBillSummary();
+      const modal = document.getElementById('checkoutModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+    function closeCheckoutModal() {
+      const modal = document.getElementById('checkoutModal');
+      if (modal) modal.classList.add('hidden');
+    }
+    async function applyPromoCode() {
+      const input = document.getElementById('promoInput');
+      const msg = document.getElementById('promoMsg');
+      if (!input || !msg) return;
+      const code = input.value.trim();
+      const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+      if (!code) return;
+
+      try {
+        const res = await fetch('/api/apply-promo/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+          body: JSON.stringify({ code, subtotal })
+        });
+        const result = await res.json();
+        if (result.status === 'success') {
+          currentDiscount = result.discount;
+          appliedPromoCode = result.code;
+          msg.className = "text-[11px] font-bold text-emerald-600";
+          msg.innerText = `Coupon Applied: ৳${result.discount} Discount!`;
+          updateBillSummary();
+        } else {
+          msg.className = "text-[11px] font-bold text-rose-500";
+          msg.innerText = result.message;
+        }
+      } catch (err) {
+        msg.innerText = "Error applying coupon";
+      }
+    }
+    async function handlePlaceOrder(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitOrderBtn');
+      btn.disabled = true;
+      btn.innerText = "Placing Order...";
+
+      const payload = {
+        name: document.getElementById('co_name').value,
+        phone: document.getElementById('co_phone').value,
+        district: document.getElementById('co_district').value,
+        thana: document.getElementById('co_thana').value,
+        address: document.getElementById('co_address').value,
+        promo_code: appliedPromoCode,
+        items: cart
+      };
+
+      try {
+        const res = await fetch('/api/checkout/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.status === 'success') {
+          alert(`🎉 Order Placed Successfully!\nOrder ID: ${result.order_id}\nTotal Bill: ৳ ${result.total}`);
+          cart = [];
+          saveCart();
+          closeCheckoutModal();
+          toggleCart();
+        } else {
+          alert('Error: ' + result.message);
+        }
+      } catch (err) {
+        alert('Server communication error. Please try again.');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Confirm Order (Cash on Delivery)";
+      }
+    }
+
+    // Live Search with 300ms Debounce
+    let searchDebounceTimer = null;
+    function handleLiveSearch(val) {
+      clearTimeout(searchDebounceTimer);
+      const dropdown = document.getElementById('searchDropdown');
+      if (!val || val.trim().length < 2) {
+        dropdown.classList.add('hidden');
+        dropdown.innerHTML = '';
+        return;
+      }
+
+      searchDebounceTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/search/?q=${encodeURIComponent(val.trim())}`);
+          const data = await res.json();
+          if (data.results && data.results.length > 0) {
+            let html = '';
+            data.results.forEach(item => {
+              html += `
+                <a href="${item.url}" class="flex items-center gap-3 p-3 hover:bg-slate-50 transition">
+                  <div class="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden shrink-0 border flex items-center justify-center">
+                    ${item.image ? `<img src="${item.image}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-box text-slate-300"></i>`}
+                  </div>
+                  <div class="flex-1">
+                    <div class="text-xs font-bold text-slate-900 line-clamp-1">${item.name}</div>
+                    <div class="text-[11px] font-black text-amber-900">৳ ${item.effective_price}</div>
+                  </div>
+                  <div class="text-[10px] font-bold ${item.stock > 0 ? 'text-emerald-600' : 'text-rose-500'}">
+                    ${item.stock > 0 ? 'In Stock' : 'Out of Stock'}
+                  </div>
+                </a>
+              `;
+            });
+            dropdown.innerHTML = html;
+            dropdown.classList.remove('hidden');
+          } else {
+            dropdown.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No matching products found</div>`;
+            dropdown.classList.remove('hidden');
+          }
+        } catch(e) {
+          dropdown.classList.add('hidden');
+        }
+      }, 300);
+    }
+
+    document.addEventListener('click', (e) => {
+      const searchBox = document.getElementById('storeSearch');
+      const dropdown = document.getElementById('searchDropdown');
+      if (dropdown && !searchBox.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', renderCartUI);
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

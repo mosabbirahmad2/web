@@ -9,6 +9,7 @@ urlpatterns = [
     path('product/<int:pk>/review/', views.add_product_review, name='add_product_review'),
     
     # Storefront APIs
+    path('api/search/', views.search_api, name='search_api'),
     path('api/apply-promo/', views.apply_promo_api, name='apply_promo_api'),
     path('api/checkout/', views.place_order_api, name='place_order_api'),
     path('api/log-event/', views.log_event_api, name='log_event_api'),

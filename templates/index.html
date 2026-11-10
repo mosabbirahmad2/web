@@ -1,525 +1,213 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ site_setting.site_name }} - Premium Mobile Covers & Accessories</title>
-  <meta name="description" content="Shop premium mobile cases, key rings and luxury accessories online in Bangladesh with fast Cash on Delivery!">
-  <meta property="og:title" content="{{ site_setting.site_name }}">
-  <meta property="og:description" content="Premium phone accessories with cash on delivery across Bangladesh.">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .cart-drawer { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-    .cart-hidden { transform: translateX(100%); }
-    @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-    .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 25s linear infinite; }
-  </style>
-</head>
-<body class="bg-[#FAF9F5] text-slate-900 flex flex-col min-h-screen">
+{% extends 'base.html' %}
+{% block title %}{{ site_setting.site_name }} - Premium Mobile Covers & Accessories{% endblock %}
 
-  <!-- Top Helpline & WhatsApp Bar -->
-  <div class="bg-white border-b border-slate-100 text-xs py-2 px-4 sm:px-8">
-    <div class="max-w-7xl mx-auto flex justify-between items-center text-slate-600">
-      <div class="flex items-center gap-4">
-        <span><i class="fa-solid fa-phone text-amber-900 mr-1"></i> Helpline: <strong>{{ site_setting.contact_phone }}</strong></span>
-        {% if site_setting.whatsapp_number %}
-        <a href="https://wa.me/{{ site_setting.whatsapp_number }}" target="_blank" class="text-emerald-600 font-bold hover:underline flex items-center gap-1">
-          <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp ({{ site_setting.whatsapp_username|default:site_setting.whatsapp_number }})
-        </a>
+{% block content %}
+<!-- Categories Squircle Carousel / Grid -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+  <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+    {% for cat in categories %}
+    <a href="{% url 'shop_category' cat.slug %}" class="group bg-white rounded-3xl p-4 border border-slate-100 hover:shadow-lg transition flex flex-col items-center text-center">
+      <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center overflow-hidden mb-3 group-hover:scale-105 transition">
+        {% if cat.image %}
+          <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover">
+        {% else %}
+          <i class="fa-solid fa-shapes text-2xl text-slate-400"></i>
         {% endif %}
       </div>
-      <div class="hidden sm:flex items-center gap-5 text-[11px] text-slate-500 font-medium">
-        <span><i class="fa-solid fa-shield-halved text-emerald-600"></i> 100% Quality Verified</span>
-        <span><i class="fa-solid fa-truck-fast text-purple-600"></i> Cash on Delivery in Bangladesh</span>
-      </div>
-    </div>
+      <span class="text-xs font-bold text-slate-800">{{ cat.name }}</span>
+    </a>
+    {% endfor %}
   </div>
+</section>
 
-  <!-- Header -->
-  <header class="bg-white sticky top-0 z-40 border-b border-slate-200 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
-      <a href="/" class="flex items-center gap-1.5">
-        <span class="text-2xl sm:text-3xl font-black italic tracking-tighter text-slate-900 uppercase">
-          {{ site_setting.site_name }}<span class="text-xs not-italic font-bold align-super text-amber-900">™</span>
-        </span>
-      </a>
-
-      <!-- Search Bar -->
-      <div class="flex-1 max-w-xl mx-2">
-        <div class="relative flex items-center">
-          <input type="text" id="storeSearch" oninput="searchLive(this.value)" placeholder="Search phone covers, key rings..." class="w-full h-11 pl-11 pr-4 rounded-full border border-slate-300 text-xs focus:outline-none focus:border-slate-900 bg-slate-50">
-          <i class="fa-solid fa-magnifying-glass absolute left-4 text-slate-400 text-xs"></i>
-        </div>
+<!-- Dynamic Showcase Sections -->
+{% for section in showcase_sections %}
+<section class="py-10 {% if section.background_style == 'brown' %}bg-[#5C3214] text-white{% elif section.background_style == 'dark' %}bg-slate-900 text-white{% else %}bg-transparent text-slate-900{% endif %}">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="flex justify-between items-center mb-8">
+      <h2 class="text-2xl sm:text-3xl font-black tracking-tight">{{ section.title }}</h2>
+      {% if section.has_countdown and section.end_time %}
+      <div class="flex items-center gap-1.5 text-xs font-mono font-bold countdown-timer" data-endtime="{{ section.end_time|date:'c' }}">
+        <span class="bg-black/30 backdrop-blur px-2.5 py-1.5 rounded-lg cd-h">00</span> :
+        <span class="bg-black/30 backdrop-blur px-2.5 py-1.5 rounded-lg cd-m">00</span> :
+        <span class="bg-black/30 backdrop-blur px-2.5 py-1.5 rounded-lg cd-s">00</span>
       </div>
-
-      <!-- Bag Button -->
-      <button onclick="toggleCart()" class="relative w-11 h-11 rounded-full border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-800 hover:bg-slate-100 transition shadow-sm">
-        <i class="fa-solid fa-bag-shopping text-sm"></i>
-        <span id="cartCountBadge" class="absolute -top-1 -right-1 bg-slate-900 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
-      </button>
+      {% endif %}
     </div>
 
-    <!-- Category Strip -->
-    <div class="bg-white border-t border-slate-100 px-4 sm:px-6">
-      <div class="max-w-7xl mx-auto flex items-center gap-3 py-2 overflow-x-auto text-xs font-bold whitespace-nowrap">
-        <a href="#all-products-section" class="bg-amber-100/70 text-amber-900 px-3.5 py-1.5 rounded-xl shrink-0">ALL PRODUCTS</a>
-        {% for cat in categories %}
-        <a href="{% url 'shop_category' cat.slug %}" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition shrink-0">
-          {{ cat.name }}
-        </a>
-        {% endfor %}
-      </div>
-    </div>
-  </header>
-
-  <!-- Modern Accessible Announcement Ticker (Pure CSS) -->
-  {% if site_setting.announcement_notice %}
-  <div class="bg-white border-b border-slate-200 py-2 overflow-hidden relative">
-    <div class="max-w-7xl mx-auto px-4 flex items-center gap-3 text-xs font-semibold text-slate-700">
-      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping shrink-0"></span>
-      <div class="overflow-hidden w-full">
-        <span class="animate-marquee">📢 {{ site_setting.announcement_notice }}</span>
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  <main class="flex-1">
-    <!-- Categories Squircle Cards -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-        {% for cat in categories %}
-        <a href="{% url 'shop_category' cat.slug %}" class="group bg-white rounded-3xl p-4 border border-slate-100 hover:shadow-lg transition flex flex-col items-center text-center">
-          <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center overflow-hidden mb-3 group-hover:scale-105 transition">
-            {% if cat.image %}
-              <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover">
-            {% else %}
-              <i class="fa-solid fa-shapes text-2xl text-slate-400"></i>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+      {% for product in section.products.all %}
+      <div class="bg-white rounded-3xl p-4 border border-slate-100 hover:shadow-xl transition flex flex-col justify-between group text-slate-900">
+        <div>
+          <div class="flex justify-between items-start mb-2">
+            {% if product.discount_percent > 0 %}
+            <span class="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+              {{ product.discount_percent }}% OFF
+            </span>
+            {% else %}<span></span>{% endif %}
+            {% if product.badge_tag %}
+            <span class="bg-amber-50 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">🔥 {{ product.badge_tag }}</span>
             {% endif %}
           </div>
-          <span class="text-xs font-bold text-slate-800">{{ cat.name }}</span>
-        </a>
-        {% endfor %}
-      </div>
-    </section>
 
-    <!-- Dynamic Showcase Sections (Flash Sale with REAL working Countdown) -->
-    {% for section in showcase_sections %}
-    <section class="py-10 {% if section.background_style == 'brown' %}bg-[#5C3214] text-white{% elif section.background_style == 'dark' %}bg-slate-900 text-white{% else %}bg-transparent text-slate-900{% endif %}">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6">
-        <div class="flex justify-between items-center mb-8">
-          <h2 class="text-2xl sm:text-3xl font-black tracking-tight">{{ section.title }}</h2>
-          {% if section.has_countdown and section.end_time %}
-          <div class="flex items-center gap-1.5 text-xs font-mono font-bold countdown-timer" data-endtime="{{ section.end_time|date:'c' }}">
-            <span class="bg-black/30 backdrop-blur px-2.5 py-1.5 rounded-lg cd-h">00</span> :
-            <span class="bg-black/30 backdrop-blur px-2.5 py-1.5 rounded-lg cd-m">00</span> :
-            <span class="bg-black/30 backdrop-blur px-2.5 py-1.5 rounded-lg cd-s">00</span>
+          <a href="{% url 'product_detail' product.pk %}" class="aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-3 flex items-center justify-center p-2 block">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-contain group-hover:scale-105 transition">
+            {% else %}
+            <i class="fa-solid fa-box text-slate-300 text-3xl"></i>
+            {% endif %}
+          </a>
+
+          <a href="{% url 'product_detail' product.pk %}" class="font-bold text-xs text-slate-800 line-clamp-1 hover:text-amber-900 block">
+            {{ product.name }}
+          </a>
+
+          <!-- Consistent Stock UI -->
+          {% if product.stock > 5 %}
+          <div class="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span> In Stock
+          </div>
+          {% elif product.stock > 0 %}
+          <div class="text-[11px] font-bold text-amber-600 mt-1 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block animate-pulse"></span> Only {{ product.stock }} left!
+          </div>
+          {% else %}
+          <div class="text-[11px] font-bold text-rose-600 mt-1 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block"></span> Out of Stock
           </div>
           {% endif %}
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
-          {% for product in section.products.all %}
-          <div class="bg-white rounded-3xl p-4 border border-slate-100 hover:shadow-xl transition flex flex-col justify-between group text-slate-900">
-            <div>
-              <div class="flex justify-between items-start mb-2">
-                {% if product.discount_percent > 0 %}
-                <span class="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
-                  {{ product.discount_percent }}% OFF
-                </span>
-                {% else %}<span></span>{% endif %}
-                {% if product.badge_tag %}
-                <span class="bg-amber-50 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">🔥 {{ product.badge_tag }}</span>
-                {% endif %}
-              </div>
-
-              <a href="{% url 'product_detail' product.pk %}" class="aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-3 flex items-center justify-center p-2 block">
-                {% if product.image %}
-                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-contain group-hover:scale-105 transition">
-                {% else %}
-                <i class="fa-solid fa-box text-slate-300 text-3xl"></i>
-                {% endif %}
-              </a>
-
-              <a href="{% url 'product_detail' product.pk %}" class="font-bold text-xs text-slate-800 line-clamp-1 hover:text-amber-900 block">
-                {{ product.name }}
-              </a>
-              <div class="text-[11px] font-semibold text-emerald-600 mt-1">● In Stock ({{ product.stock }})</div>
-            </div>
-
-            <div class="mt-4">
-              <div class="flex items-center gap-2 mb-3">
-                <span class="text-base font-black text-slate-900">৳ {{ product.effective_price }}</span>
-                {% if product.discount_price and product.discount_price < product.price %}
-                <span class="text-xs text-slate-400 line-through">৳ {{ product.price }}</span>
-                {% endif %}
-              </div>
-              <div class="flex items-center gap-2">
-                <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="flex-1 bg-slate-900 hover:bg-black text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
-                  <i class="fa-solid fa-basket-shopping"></i> Add to Bag
-                </button>
-              </div>
-            </div>
+        <div class="mt-4">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-base font-black text-slate-900">৳ {{ product.effective_price }}</span>
+            {% if product.discount_price and product.discount_price < product.price %}
+            <span class="text-xs text-slate-400 line-through">৳ {{ product.price }}</span>
+            {% endif %}
           </div>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
-    {% endfor %}
-
-    <!-- All Products Catalog -->
-    <section id="all-products-section" class="py-14 bg-white border-t border-slate-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6">
-        <div class="flex justify-between items-center mb-10 pb-4 border-b border-slate-100">
-          <div>
-            <span class="text-xs font-bold uppercase tracking-wider text-amber-900 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Complete Catalog</span>
-            <h2 class="text-3xl font-black text-slate-900 tracking-tight mt-2">All Products</h2>
+          <div class="flex items-center gap-2">
+            {% if product.stock > 0 %}
+            <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="flex-1 bg-slate-900 hover:bg-black text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-basket-shopping"></i> Add to Bag
+            </button>
+            {% else %}
+            <button disabled class="flex-1 bg-slate-200 text-slate-400 py-2 rounded-xl text-xs font-bold cursor-not-allowed">
+              Out of Stock
+            </button>
+            {% endif %}
           </div>
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          {% for product in products %}
-          <div class="bg-white rounded-3xl p-4 border border-slate-100 hover:shadow-xl transition flex flex-col justify-between group">
-            <div>
-              <div class="flex justify-between items-start mb-2">
-                {% if product.discount_percent > 0 %}
-                <span class="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">{{ product.discount_percent }}% OFF</span>
-                {% else %}<span></span>{% endif %}
-              </div>
-              <a href="{% url 'product_detail' product.pk %}" class="aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-3 flex items-center justify-center p-2 block">
-                {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-contain group-hover:scale-105 transition">{% endif %}
-              </a>
-              <a href="{% url 'product_detail' product.pk %}" class="font-bold text-xs text-slate-800 line-clamp-1 block">{{ product.name }}</a>
-              <div class="text-[11px] font-semibold text-emerald-600 mt-1">● In Stock</div>
-            </div>
-            <div class="mt-4">
-              <div class="flex items-center gap-2 mb-3">
-                <span class="text-base font-black text-slate-900">৳ {{ product.effective_price }}</span>
-                {% if product.discount_price and product.discount_price < product.price %}
-                <span class="text-xs text-slate-400 line-through">৳ {{ product.price }}</span>
-                {% endif %}
-              </div>
-              <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="w-full bg-slate-900 hover:bg-black text-white py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
-                <i class="fa-solid fa-basket-shopping"></i> Add to Bag
-              </button>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
       </div>
-    </section>
-  </main>
-
-  <!-- Cart Drawer -->
-  <div id="cartDrawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 cart-drawer cart-hidden flex flex-col">
-    <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-[#FAF9F5]">
-      <div class="flex items-center gap-2">
-        <i class="fa-solid fa-bag-shopping text-amber-900"></i>
-        <h2 class="text-base font-bold text-slate-900">Your Shopping Bag</h2>
-      </div>
-      <button onclick="toggleCart()" class="text-slate-400 hover:text-black text-xl p-1">&times;</button>
-    </div>
-    <div id="cartItemsContainer" class="flex-1 p-5 overflow-y-auto space-y-3"></div>
-    <div class="p-5 border-t border-slate-100 bg-[#FAF9F5] space-y-3">
-      <div class="flex justify-between items-center text-sm font-bold">
-        <span>Items Subtotal</span><span id="cartTotalPrice">৳ 0</span>
-      </div>
-      <button onclick="openCheckoutModal()" class="w-full bg-[#5C3214] text-white py-3.5 rounded-2xl font-bold text-xs shadow-lg hover:opacity-95 transition">
-        Proceed to Checkout &rarr;
-      </button>
+      {% endfor %}
     </div>
   </div>
-  <div id="cartBackdrop" class="hidden fixed inset-0 bg-slate-900/60 z-40 transition-opacity" onclick="toggleCart()"></div>
+</section>
+{% endfor %}
 
-  <!-- Cash on Delivery Checkout Modal with Promo Code Breakdown -->
-  <div id="checkoutModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-900 text-base">Cash on Delivery Order</h3>
-        <button onclick="closeCheckoutModal()" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+<!-- Complete Products Catalog with Working Numbered Pagination -->
+<section id="all-products-section" class="py-14 bg-white border-t border-slate-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="flex justify-between items-center mb-10 pb-4 border-b border-slate-100">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-amber-900 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Catalog</span>
+        <h2 class="text-3xl font-black text-slate-900 tracking-tight mt-2">
+          {% if search_query %}Search Results for "{{ search_query }}"{% else %}All Products{% endif %}
+        </h2>
       </div>
-
-      <form id="checkoutForm" onsubmit="handlePlaceOrder(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
-          <input type="text" id="co_name" required placeholder="e.g. Mosabbir Ahmad" class="w-full border rounded-xl px-4 py-2 text-xs bg-slate-50 outline-none">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Mobile Number *</label>
-          <input type="text" id="co_phone" required placeholder="017xxxxxxxx" class="w-full border rounded-xl px-4 py-2 text-xs bg-slate-50 outline-none">
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">District *</label>
-            <select id="co_district" required onchange="handleDistrictChange(this.value)" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
-              <option value="Dhaka" selected>Dhaka</option>
-              <option value="Chittagong">Chittagong</option>
-              <option value="Sylhet">Sylhet</option>
-              <option value="Rajshahi">Rajshahi</option>
-              <option value="Khulna">Khulna</option>
-              <option value="Barisal">Barisal</option>
-              <option value="Rangpur">Rangpur</option>
-              <option value="Gazipur">Gazipur</option>
-              <option value="Other">Other Location</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Thana / Area</label>
-            <input type="text" id="co_thana" placeholder="e.g. Mirpur, Dhanmondi" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Full Street Address *</label>
-          <textarea id="co_address" required rows="2" placeholder="House, Road, Area, Landmark" class="w-full border rounded-xl p-3 text-xs bg-slate-50 outline-none"></textarea>
-        </div>
-
-        <!-- Working Promo Code Input -->
-        <div class="flex gap-2 pt-1">
-          <input type="text" id="promoInput" placeholder="Coupon Code (e.g. SAVE10)" class="flex-1 border rounded-xl px-3 py-2 text-xs uppercase font-mono bg-slate-50 outline-none">
-          <button type="button" onclick="applyPromoCode()" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-black">Apply</button>
-        </div>
-        <div id="promoMsg" class="text-[11px] font-bold"></div>
-
-        <div class="p-4 bg-amber-50/70 border border-amber-200/60 rounded-2xl text-xs space-y-1.5 font-semibold text-slate-800">
-          <div class="flex justify-between"><span>Items Subtotal:</span><span id="summary_prod_price">৳ 0</span></div>
-          <div class="flex justify-between text-emerald-700"><span>Coupon Discount:</span><span id="summary_discount">- ৳ 0</span></div>
-          <div class="flex justify-between"><span>Delivery Fee:</span><span id="summary_del_charge">৳ 70</span></div>
-          <div class="border-t border-amber-200 pt-1.5 flex justify-between text-sm font-black text-amber-900">
-            <span>Total Payable:</span><span id="summary_total_bill">৳ 0</span>
-          </div>
-        </div>
-
-        <button type="submit" id="submitOrderBtn" class="w-full py-3.5 bg-[#5C3214] text-white rounded-2xl font-bold text-xs hover:opacity-95 transition shadow-lg">
-          Confirm Order (Cash on Delivery)
-        </button>
-      </form>
+      <div class="text-xs font-bold text-slate-500">
+        Total Products: <span class="text-slate-900">{{ products.paginator.count }}</span>
+      </div>
     </div>
-  </div>
 
-  <!-- Footer -->
-  <footer class="bg-slate-950 text-slate-400 text-xs py-10 mt-16 border-t border-slate-800 text-center space-y-2">
-    <p class="font-black text-white text-lg tracking-wider uppercase">{{ site_setting.site_name }}</p>
-    <p>{{ site_setting.office_address }} | Helpline: {{ site_setting.contact_phone }}</p>
-    <p class="text-slate-600">&copy; 2026 {{ site_setting.site_name }}. All Rights Reserved.</p>
-  </footer>
-
-  <script>
-    function getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
-    }
-    const csrftoken = getCookie('csrftoken');
-
-    let cart = JSON.parse(localStorage.getItem('fantacy_cart') || '[]');
-    let currentDiscount = 0;
-    let appliedPromoCode = '';
-    const feeDhaka = parseFloat("{{ site_setting.delivery_fee_dhaka|default:70 }}");
-    const feeOutside = parseFloat("{{ site_setting.delivery_fee_outside|default:130 }}");
-    let deliveryFee = feeDhaka;
-
-    function saveCart() {
-      localStorage.setItem('fantacy_cart', JSON.stringify(cart));
-      renderCartUI();
-    }
-    function toggleCart() {
-      document.getElementById('cartDrawer').classList.toggle('cart-hidden');
-      document.getElementById('cartBackdrop').classList.toggle('hidden');
-    }
-    function addToBag(id, name, price, img) {
-      const existing = cart.find(i => i.id === id);
-      if (existing) { existing.qty += 1; }
-      else { cart.push({ id, name, price: parseFloat(price), img: img || '', qty: 1 }); }
-      saveCart();
-      toggleCart();
-
-      fetch('/api/log-event/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
-        body: JSON.stringify({ event_type: 'add_to_cart', product_id: id })
-      });
-    }
-    function updateQty(idx, delta) {
-      if (cart[idx]) {
-        cart[idx].qty += delta;
-        if (cart[idx].qty <= 0) cart.splice(idx, 1);
-        saveCart();
-      }
-    }
-    function removeCartItem(idx) {
-      cart.splice(idx, 1);
-      saveCart();
-    }
-    function renderCartUI() {
-      document.getElementById('cartCountBadge').innerText = cart.reduce((a, b) => a + b.qty, 0);
-      const container = document.getElementById('cartItemsContainer');
-      const totalSpan = document.getElementById('cartTotalPrice');
-
-      if (cart.length === 0) {
-        container.innerHTML = `<div class="text-center py-16 text-slate-400 text-xs">Your shopping bag is empty</div>`;
-        totalSpan.innerText = '৳ 0';
-        return;
-      }
-      let total = 0, html = '';
-      cart.forEach((item, idx) => {
-        total += (item.price * item.qty);
-        html += `
-          <div class="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
-            <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-xl bg-slate-50 border overflow-hidden shrink-0 flex items-center justify-center">
-                ${item.img ? `<img src="${item.img}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-box text-slate-300"></i>`}
-              </div>
-              <div>
-                <h4 class="text-xs font-bold text-slate-800 line-clamp-1">${item.name}</h4>
-                <div class="text-xs font-black text-slate-900 mt-0.5">৳ ${item.price}</div>
-                <div class="flex items-center gap-2 mt-1">
-                  <button onclick="updateQty(${idx}, -1)" class="w-5 h-5 rounded bg-slate-100 text-xs font-bold">-</button>
-                  <span class="text-xs font-bold">${item.qty}</span>
-                  <button onclick="updateQty(${idx}, 1)" class="w-5 h-5 rounded bg-slate-100 text-xs font-bold">+</button>
-                </div>
-              </div>
-            </div>
-            <button onclick="removeCartItem(${idx})" class="text-slate-400 hover:text-rose-500 p-2"><i class="fa-regular fa-trash-can"></i></button>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+      {% for product in products %}
+      <div class="bg-white rounded-3xl p-4 border border-slate-100 hover:shadow-xl transition flex flex-col justify-between group">
+        <div>
+          <div class="flex justify-between items-start mb-2">
+            {% if product.discount_percent > 0 %}
+            <span class="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">{{ product.discount_percent }}% OFF</span>
+            {% else %}<span></span>{% endif %}
           </div>
-        `;
-      });
-      container.innerHTML = html;
-      totalSpan.innerText = `৳ ${total}`;
-    }
-    function handleDistrictChange(dist) {
-      deliveryFee = (dist.toLowerCase() === 'dhaka') ? feeDhaka : feeOutside;
-      updateBillSummary();
-    }
-    function updateBillSummary() {
-      const prodTotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-      document.getElementById('summary_prod_price').innerText = `৳ ${prodTotal}`;
-      document.getElementById('summary_discount').innerText = `- ৳ ${currentDiscount}`;
-      document.getElementById('summary_del_charge').innerText = `৳ ${deliveryFee}`;
-      document.getElementById('summary_total_bill').innerText = `৳ ${Math.max(0, prodTotal - currentDiscount) + deliveryFee}`;
-    }
-    function openCheckoutModal() {
-      if (cart.length === 0) { alert('Your bag is empty!'); return; }
-      updateBillSummary();
-      document.getElementById('checkoutModal').classList.remove('hidden');
-      fetch('/api/log-event/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
-        body: JSON.stringify({ event_type: 'checkout_start' })
-      });
-    }
-    function closeCheckoutModal() {
-      document.getElementById('checkoutModal').classList.add('hidden');
-    }
-    async function applyPromoCode() {
-      const code = document.getElementById('promoInput').value.trim();
-      const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-      const msg = document.getElementById('promoMsg');
-      if (!code) return;
+          <a href="{% url 'product_detail' product.pk %}" class="aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-3 flex items-center justify-center p-2 block">
+            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-contain group-hover:scale-105 transition">{% endif %}
+          </a>
+          <a href="{% url 'product_detail' product.pk %}" class="font-bold text-xs text-slate-800 line-clamp-1 block">{{ product.name }}</a>
+          
+          <!-- Consistent Stock UI -->
+          {% if product.stock > 5 %}
+          <div class="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span> In Stock
+          </div>
+          {% elif product.stock > 0 %}
+          <div class="text-[11px] font-bold text-amber-600 mt-1 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block animate-pulse"></span> Only {{ product.stock }} left!
+          </div>
+          {% else %}
+          <div class="text-[11px] font-bold text-rose-600 mt-1 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block"></span> Out of Stock
+          </div>
+          {% endif %}
+        </div>
 
-      try {
-        const res = await fetch('/api/apply-promo/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
-          body: JSON.stringify({ code, subtotal })
-        });
-        const result = await res.json();
-        if (result.status === 'success') {
-          currentDiscount = result.discount;
-          appliedPromoCode = result.code;
-          msg.className = "text-[11px] font-bold text-emerald-600";
-          msg.innerText = `Coupon Applied: ৳${result.discount} Discount!`;
-          updateBillSummary();
-        } else {
-          msg.className = "text-[11px] font-bold text-rose-500";
-          msg.innerText = result.message;
-        }
-      } catch (err) {
-        msg.innerText = "Error applying coupon";
+        <div class="mt-4">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-base font-black text-slate-900">৳ {{ product.effective_price }}</span>
+            {% if product.discount_price and product.discount_price < product.price %}
+            <span class="text-xs text-slate-400 line-through">৳ {{ product.price }}</span>
+            {% endif %}
+          </div>
+          {% if product.stock > 0 %}
+          <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="w-full bg-slate-900 hover:bg-black text-white py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-basket-shopping"></i> Add to Bag
+          </button>
+          {% else %}
+          <button disabled class="w-full bg-slate-200 text-slate-400 py-2.5 rounded-xl text-xs font-bold cursor-not-allowed">
+            Out of Stock
+          </button>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-span-full text-center py-20 text-slate-400">
+        No products found matching your search.
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination Controls (Preserving Query Params) -->
+    {% if products.has_other_pages %}
+    <div class="mt-12 flex justify-between items-center text-xs text-slate-500 border-t pt-6">
+      <span>Page {{ products.number }} of {{ products.paginator.num_pages }}</span>
+      <div class="flex gap-2">
+        {% if products.has_previous %}
+        <a href="?page={{ products.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}#all-products-section" class="px-4 py-2 border rounded-xl font-bold hover:bg-slate-50">&larr; Previous</a>
+        {% endif %}
+        {% if products.has_next %}
+        <a href="?page={{ products.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}#all-products-section" class="px-4 py-2 border rounded-xl font-bold hover:bg-slate-50">Next &rarr;</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  setInterval(() => {
+    document.querySelectorAll('.countdown-timer').forEach(el => {
+      const endTime = new Date(el.dataset.endtime).getTime();
+      const now = new Date().getTime();
+      const diff = endTime - now;
+      if (diff > 0) {
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        el.querySelector('.cd-h').innerText = String(h).padStart(2, '0');
+        el.querySelector('.cd-m').innerText = String(m).padStart(2, '0');
+        el.querySelector('.cd-s').innerText = String(s).padStart(2, '0');
       }
-    }
-    async function handlePlaceOrder(e) {
-      e.preventDefault();
-      const btn = document.getElementById('submitOrderBtn');
-      btn.disabled = true;
-      btn.innerText = "Placing Order...";
-
-      const payload = {
-        name: document.getElementById('co_name').value,
-        phone: document.getElementById('co_phone').value,
-        district: document.getElementById('co_district').value,
-        thana: document.getElementById('co_thana').value,
-        address: document.getElementById('co_address').value,
-        promo_code: appliedPromoCode,
-        items: cart
-      };
-
-      try {
-        const res = await fetch('/api/checkout/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
-          body: JSON.stringify(payload)
-        });
-        const result = await res.json();
-        if (result.status === 'success') {
-          alert(`🎉 Order Placed Successfully!\nOrder ID: ${result.order_id}\nTotal Bill: ৳ ${result.total}`);
-          cart = [];
-          saveCart();
-          closeCheckoutModal();
-          toggleCart();
-        } else {
-          alert('Error: ' + result.message);
-        }
-      } catch (err) {
-        alert('Server communication error. Please try again.');
-      } finally {
-        btn.disabled = false;
-        btn.innerText = "Confirm Order (Cash on Delivery)";
-      }
-    }
-
-    // Working Flash Sale Countdown Engine
-    setInterval(() => {
-      document.querySelectorAll('.countdown-timer').forEach(el => {
-        const endTime = new Date(el.dataset.endtime).getTime();
-        const now = new Date().getTime();
-        const diff = endTime - now;
-        if (diff > 0) {
-          const h = Math.floor(diff / (1000 * 60 * 60));
-          const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          const s = Math.floor((diff % (1000 * 60)) / 1000);
-          el.querySelector('.cd-h').innerText = String(h).padStart(2, '0');
-          el.querySelector('.cd-m').innerText = String(m).padStart(2, '0');
-          el.querySelector('.cd-s').innerText = String(s).padStart(2, '0');
-        }
-      });
-    }, 1000);
-
-    let searchTimer = null;
-    function searchLive(val) {
-      clearTimeout(searchTimer);
-      if (val.trim().length > 1) {
-        searchTimer = setTimeout(() => {
-          fetch('/api/log-event/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
-            body: JSON.stringify({ event_type: 'search', query: val.trim() })
-          });
-        }, 800);
-      }
-    }
-    document.addEventListener('DOMContentLoaded', renderCartUI);
-  </script>
-</body>
-</html>
+    });
+  }, 1000);
+</script>
+{% endblock %}
