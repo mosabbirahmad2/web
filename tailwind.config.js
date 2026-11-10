@@ -12,6 +12,7 @@ module.exports = {
       },
       colors: {
         themeBrown: '#5C3214',
+        zatiqPurple: '#541DFF',
       }
     },
   },

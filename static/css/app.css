@@ -6,6 +6,6 @@ body { margin: 0; line-height: inherit; }
 .cart-hidden { transform: translateX(100%); }
 @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 25s linear infinite; }
-.btn-purple { background-color: #5B21B6; color: white; }
-.btn-purple:hover { background-color: #4C1D95; }
-.active-nav { background-color: #EDE9FE; color: #5B21B6; font-weight: 700; }
+.btn-purple { background-color: #541DFF; color: white; }
+.btn-purple:hover { background-color: #4313d6; }
+.active-nav { background-color: #EDE9FE; color: #541DFF; font-weight: 700; }
