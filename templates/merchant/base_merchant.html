@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Merchant Admin - Zatiqeasy{% endblock %}</title>
+  <title>{% block title %}Merchant Admin - Fantacy Tech{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -15,11 +15,11 @@
 </head>
 <body class="bg-gray-50 flex h-screen overflow-hidden">
   <!-- Sidebar -->
-  <aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between overflow-y-auto">
+  <aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between overflow-y-auto shrink-0">
     <div>
       <div class="h-16 flex items-center px-6 border-b border-gray-100">
-        <span class="text-2xl font-bold tracking-tight text-blue-600 flex items-center gap-2">
-          <i class="fa-solid fa-shapes text-purple-700"></i> zatiq<span class="text-gray-900 font-normal">easy</span>
+        <span class="text-xl font-black tracking-tight text-purple-700 flex items-center gap-2 uppercase">
+          <i class="fa-solid fa-shapes text-purple-700"></i> Fantacy<span class="text-gray-900 font-normal">Tech</span>
         </span>
       </div>
       <nav class="p-4 space-y-1 text-sm text-gray-700">
@@ -35,6 +35,12 @@
         <a href="{% url 'merchant_categories' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 {% if active_menu == 'categories' %}active-nav{% endif %}">
           <i class="fa-solid fa-layer-group w-5"></i> Categories
         </a>
+        <a href="{% url 'merchant_sections' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 {% if active_menu == 'sections' %}active-nav{% endif %}">
+          <i class="fa-solid fa-table-cells-large w-5"></i> Showcase Sections
+        </a>
+        <a href="{% url 'merchant_settings' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 {% if active_menu == 'settings' %}active-nav{% endif %}">
+          <i class="fa-solid fa-gear w-5"></i> Site Settings
+        </a>
         <a href="{% url 'merchant_promos' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 {% if active_menu == 'promo' %}active-nav{% endif %}">
           <i class="fa-solid fa-ticket w-5"></i> Promo Codes
         </a>
@@ -43,19 +49,18 @@
         </a>
       </nav>
     </div>
-    <!-- Reseller Program removed -->
   </aside>
 
   <!-- Main Content Area -->
   <div class="flex-1 flex flex-col overflow-y-auto">
-    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
+    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0">
       <div class="flex items-center gap-3">
-        <i id="sidebarToggle" class="fa-solid fa-bars text-gray-500 cursor-pointer text-lg hover:text-purple-700 transition"></i>
+        <i class="fa-solid fa-bars text-gray-500 cursor-pointer text-lg hover:text-purple-700 transition"></i>
       </div>
       <div class="flex items-center gap-6">
         <div class="text-right hidden sm:block">
           <p class="text-xs font-bold text-gray-800">{{ request.user.username|title|default:"Admin" }}</p>
-          <p class="text-[10px] text-gray-400">Store Merchant</p>
+          <p class="text-[10px] text-gray-400">Fantacy Tech Super Admin</p>
         </div>
         <a href="{% url 'admin_logout' %}" title="Logout" class="w-9 h-9 rounded-full bg-red-50 text-red-600 flex items-center justify-center font-bold text-sm hover:bg-red-100 transition">
           <i class="fa-solid fa-power-off text-xs"></i>
@@ -75,14 +80,5 @@
       {% block content %}{% endblock %}
     </main>
   </div>
-  <script>
-    const toggleBtn = document.getElementById('sidebarToggle');
-    if (toggleBtn) {
-      toggleBtn.onclick = () => {
-        const aside = document.querySelector('aside');
-        aside.classList.toggle('hidden');
-      };
-    }
-  </script>
 </body>
 </html>
