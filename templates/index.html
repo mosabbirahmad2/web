@@ -2,19 +2,20 @@
 {% block title %}{{ site_setting.site_name }} - Premium Mobile Covers & Accessories{% endblock %}
 
 {% block content %}
-<!-- Categories Squircle Carousel / Grid -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-  <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+<!-- Categories Section: LARGER & MORE ATTRACTIVE -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
     {% for cat in categories %}
-    <a href="{% url 'shop_category' cat.slug %}" class="group bg-white rounded-3xl p-4 border border-slate-100 hover:shadow-lg transition flex flex-col items-center text-center">
-      <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center overflow-hidden mb-3 group-hover:scale-105 transition">
+    <a href="{% url 'shop_category' cat.slug %}" class="group bg-white rounded-3xl p-5 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all flex flex-col items-center text-center">
+      <div class="w-24 h-24 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden mb-3 group-hover:scale-105 transition-all duration-300">
         {% if cat.image %}
           <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover">
         {% else %}
-          <i class="fa-solid fa-shapes text-2xl text-slate-400"></i>
+          <i class="fa-solid fa-shapes text-3xl text-slate-300"></i>
         {% endif %}
       </div>
-      <span class="text-xs font-bold text-slate-800">{{ cat.name }}</span>
+      <span class="text-sm font-bold text-slate-900 group-hover:text-amber-900 transition">{{ cat.name }}</span>
+      <span class="text-[11px] text-slate-400 mt-0.5">{{ cat.products.count }} items</span>
     </a>
     {% endfor %}
   </div>
@@ -35,34 +36,34 @@
       {% endif %}
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
       {% for product in section.products.all %}
-      <div class="bg-white rounded-3xl p-4 border border-slate-100 hover:shadow-xl transition flex flex-col justify-between group text-slate-900">
+      <div class="bg-white rounded-3xl p-4 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all flex flex-col justify-between group text-slate-900">
         <div>
           <div class="flex justify-between items-start mb-2">
             {% if product.discount_percent > 0 %}
-            <span class="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+            <span class="bg-rose-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-sm">
               {{ product.discount_percent }}% OFF
             </span>
             {% else %}<span></span>{% endif %}
             {% if product.badge_tag %}
-            <span class="bg-amber-50 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">🔥 {{ product.badge_tag }}</span>
+            <span class="bg-amber-50 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200">🔥 {{ product.badge_tag }}</span>
             {% endif %}
           </div>
 
-          <a href="{% url 'product_detail' product.pk %}" class="aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-3 flex items-center justify-center p-2 block">
+          <a href="{% url 'product_detail' product.pk %}" class="aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-3 flex items-center justify-center p-2 block border border-slate-100">
             {% if product.image %}
-            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-contain group-hover:scale-105 transition">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-contain group-hover:scale-105 transition-all">
             {% else %}
             <i class="fa-solid fa-box text-slate-300 text-3xl"></i>
             {% endif %}
           </a>
 
-          <a href="{% url 'product_detail' product.pk %}" class="font-bold text-xs text-slate-800 line-clamp-1 hover:text-amber-900 block">
+          <div class="text-[10px] text-slate-400 font-mono font-bold">SKU: {{ product.product_code|default:"FT-101" }}</div>
+          <a href="{% url 'product_detail' product.pk %}" class="font-bold text-xs text-slate-900 line-clamp-1 hover:text-amber-900 block mt-0.5">
             {{ product.name }}
           </a>
 
-          <!-- Consistent Stock UI -->
           {% if product.stock > 5 %}
           <div class="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span> In Stock
@@ -87,11 +88,11 @@
           </div>
           <div class="flex items-center gap-2">
             {% if product.stock > 0 %}
-            <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="flex-1 bg-slate-900 hover:bg-black text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+            <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{{ product.price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="flex-1 bg-slate-900 hover:bg-black text-white py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
               <i class="fa-solid fa-basket-shopping"></i> Add to Bag
             </button>
             {% else %}
-            <button disabled class="flex-1 bg-slate-200 text-slate-400 py-2 rounded-xl text-xs font-bold cursor-not-allowed">
+            <button disabled class="flex-1 bg-slate-200 text-slate-400 py-2.5 rounded-xl text-xs font-bold cursor-not-allowed">
               Out of Stock
             </button>
             {% endif %}
@@ -104,36 +105,36 @@
 </section>
 {% endfor %}
 
-<!-- Complete Products Catalog with Working Numbered Pagination -->
+<!-- Complete Products Catalog (Distinct Product Cards) -->
 <section id="all-products-section" class="py-14 bg-white border-t border-slate-200">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="flex justify-between items-center mb-10 pb-4 border-b border-slate-100">
       <div>
-        <span class="text-xs font-bold uppercase tracking-wider text-amber-900 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Catalog</span>
+        <span class="text-xs font-bold uppercase tracking-wider text-amber-900 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Full Catalog</span>
         <h2 class="text-3xl font-black text-slate-900 tracking-tight mt-2">
           {% if search_query %}Search Results for "{{ search_query }}"{% else %}All Products{% endif %}
         </h2>
       </div>
       <div class="text-xs font-bold text-slate-500">
-        Total Products: <span class="text-slate-900">{{ products.paginator.count }}</span>
+        Total Products: <span class="text-slate-900 font-black">{{ products.paginator.count }}</span>
       </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
       {% for product in products %}
-      <div class="bg-white rounded-3xl p-4 border border-slate-100 hover:shadow-xl transition flex flex-col justify-between group">
+      <div class="bg-white rounded-3xl p-4 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all flex flex-col justify-between group">
         <div>
           <div class="flex justify-between items-start mb-2">
             {% if product.discount_percent > 0 %}
-            <span class="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">{{ product.discount_percent }}% OFF</span>
+            <span class="bg-rose-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-sm">{{ product.discount_percent }}% OFF</span>
             {% else %}<span></span>{% endif %}
           </div>
-          <a href="{% url 'product_detail' product.pk %}" class="aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-3 flex items-center justify-center p-2 block">
-            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-contain group-hover:scale-105 transition">{% endif %}
+          <a href="{% url 'product_detail' product.pk %}" class="aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-3 flex items-center justify-center p-2 block border border-slate-100">
+            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-contain group-hover:scale-105 transition-all">{% endif %}
           </a>
-          <a href="{% url 'product_detail' product.pk %}" class="font-bold text-xs text-slate-800 line-clamp-1 block">{{ product.name }}</a>
+          <div class="text-[10px] text-slate-400 font-mono font-bold">SKU: {{ product.product_code|default:"FT-101" }}</div>
+          <a href="{% url 'product_detail' product.pk %}" class="font-bold text-xs text-slate-900 line-clamp-1 block mt-0.5">{{ product.name }}</a>
           
-          <!-- Consistent Stock UI -->
           {% if product.stock > 5 %}
           <div class="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span> In Stock
@@ -157,7 +158,7 @@
             {% endif %}
           </div>
           {% if product.stock > 0 %}
-          <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="w-full bg-slate-900 hover:bg-black text-white py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+          <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{{ product.price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="w-full bg-slate-900 hover:bg-black text-white py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
             <i class="fa-solid fa-basket-shopping"></i> Add to Bag
           </button>
           {% else %}
@@ -174,7 +175,7 @@
       {% endfor %}
     </div>
 
-    <!-- Pagination Controls (Preserving Query Params) -->
+    <!-- Pagination Controls -->
     {% if products.has_other_pages %}
     <div class="mt-12 flex justify-between items-center text-xs text-slate-500 border-t pt-6">
       <span>Page {{ products.number }} of {{ products.paginator.num_pages }}</span>

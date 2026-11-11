@@ -10,14 +10,20 @@ DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
     if DEBUG:
-        SECRET_KEY = 'django-insecure-dev-fallback-key-for-local-testing-only'
+        SECRET_KEY = 'django-insecure-dev-fallback-key-strictly-for-local-development-only'
     else:
-        raise RuntimeError("CRITICAL: SECRET_KEY environment variable is missing in production mode (DEBUG=False).")
+        raise RuntimeError("CRITICAL: SECRET_KEY is missing in production mode (DEBUG=False).")
 
 allowed_hosts_raw = os.getenv('ALLOWED_HOSTS', '')
-if not allowed_hosts_raw and not DEBUG:
-    raise RuntimeError("CRITICAL: ALLOWED_HOSTS must be set in production.")
-ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_raw.split(',') if h.strip()] if allowed_hosts_raw else ['*'] if DEBUG else []
+if not allowed_hosts_raw:
+    if DEBUG:
+        ALLOWED_HOSTS = ['*']
+    else:
+        raise RuntimeError("CRITICAL: ALLOWED_HOSTS must be set when DEBUG=False.")
+else:
+    ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_raw.split(',') if h.strip()]
+    if not DEBUG and '*' in ALLOWED_HOSTS:
+        raise RuntimeError("CRITICAL: Wildcard '*' in ALLOWED_HOSTS is forbidden in production.")
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -82,12 +88,21 @@ else:
         }
     }
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'fantacytech-local-cache',
+redis_url = os.getenv('REDIS_URL')
+if redis_url:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': redis_url,
+        }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'django_shared_cache_table',
+        }
+    }
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Dhaka'

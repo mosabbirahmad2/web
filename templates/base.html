@@ -5,16 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{{ site_setting.site_name }} - Premium Accessories{% endblock %}</title>
-  <meta name="description" content="Shop premium mobile cases, key rings and luxury accessories online in Bangladesh with Cash on Delivery!">
-  <meta property="og:title" content="{{ site_setting.site_name }}">
-  <meta property="og:description" content="Premium mobile covers & key rings in Bangladesh.">
   
-  <!-- Preconnect and Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Compiled Tailwind CSS & FontAwesome Icons -->
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
@@ -22,6 +17,10 @@
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
     .bg-theme { background-color: {{ site_setting.theme_color|default:"#5C3214" }}; }
     .text-theme { color: {{ site_setting.theme_color|default:"#5C3214" }}; }
+    .cart-drawer { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .cart-hidden { transform: translateX(100%); }
+    @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 25s linear infinite; }
   </style>
   {% block extra_head %}{% endblock %}
 </head>
@@ -39,13 +38,13 @@
         {% endif %}
       </div>
       <div class="hidden sm:flex items-center gap-5 text-[11px] text-slate-500 font-medium">
-        <span><i class="fa-solid fa-shield-halved text-emerald-600"></i> Verified Quality</span>
+        <span><i class="fa-solid fa-shield-halved text-emerald-600"></i> 100% Quality Verified</span>
         <span><i class="fa-solid fa-truck-fast text-purple-600"></i> Cash on Delivery Nationwide</span>
       </div>
     </div>
   </div>
 
-  <!-- Main Header with REAL Working Live Search -->
+  <!-- Main Header with VISIBLE CLICKABLE SEARCH BUTTON -->
   <header class="bg-white sticky top-0 z-40 border-b border-slate-200 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
       <a href="/" class="flex items-center gap-1.5 shrink-0">
@@ -54,11 +53,11 @@
         </span>
       </a>
 
-      <!-- Real Live Search Bar -->
+      <!-- Search Bar with Clickable Button -->
       <div class="relative flex-1 max-w-xl mx-2">
         <form action="/" method="GET" class="relative flex items-center">
-          <input type="text" name="q" id="storeSearch" value="{{ search_query|default:'' }}" autocomplete="off" oninput="handleLiveSearch(this.value)" placeholder="Search phone covers, key rings..." class="w-full h-11 pl-11 pr-4 rounded-full border border-slate-300 text-xs focus:outline-none focus:border-slate-900 bg-slate-50">
-          <button type="submit" class="absolute left-4 text-slate-400 text-xs hover:text-slate-900">
+          <input type="text" name="q" id="storeSearch" value="{{ search_query|default:'' }}" autocomplete="off" oninput="handleLiveSearch(this.value)" placeholder="Search by name, SKU or model..." class="w-full h-11 pl-4 pr-14 rounded-full border border-slate-300 text-xs focus:outline-none focus:border-slate-900 bg-slate-50/70">
+          <button type="submit" class="absolute right-1.5 top-1.5 h-8 px-4 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-full flex items-center justify-center transition shadow-sm">
             <i class="fa-solid fa-magnifying-glass"></i>
           </button>
         </form>
@@ -103,7 +102,7 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Cart Drawer -->
+  <!-- Cart Drawer (Shopping Bag) -->
   <div id="cartDrawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 cart-drawer cart-hidden flex flex-col">
     <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-[#FAF9F5]">
       <div class="flex items-center gap-2">
@@ -124,7 +123,7 @@
   </div>
   <div id="cartBackdrop" class="hidden fixed inset-0 bg-slate-900/60 z-40 transition-opacity" onclick="toggleCart()"></div>
 
-  <!-- Cash on Delivery Checkout Modal with Working Promo -->
+  <!-- Cash on Delivery Checkout Modal -->
   <div id="checkoutModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
@@ -227,10 +226,18 @@
       document.getElementById('cartDrawer').classList.toggle('cart-hidden');
       document.getElementById('cartBackdrop').classList.toggle('hidden');
     }
-    function addToBag(id, name, price, img) {
-      const existing = cart.find(i => i.id === id);
-      if (existing) { existing.qty += 1; }
-      else { cart.push({ id, name, price: parseFloat(price), img: img || '', qty: 1 }); }
+
+    // SILENT AJAX ADD TO BAG (Updates badge without reloading page!)
+    function addToBag(id, name, effectivePrice, regularPrice, img) {
+      const p = parseFloat(effectivePrice);
+      const regP = regularPrice ? parseFloat(regularPrice) : p;
+      const existing = cart.find(i => String(i.id) === String(id));
+      if (existing) { 
+        existing.qty += 1;
+        existing.price = p; // Keep price synced to discounted value
+      } else { 
+        cart.push({ id: String(id), name, price: p, regularPrice: regP, img: img || '', qty: 1 }); 
+      }
       saveCart();
       toggleCart();
 
@@ -240,6 +247,7 @@
         body: JSON.stringify({ event_type: 'add_to_cart', product_id: id })
       });
     }
+
     function updateQty(idx, delta) {
       if (cart[idx]) {
         cart[idx].qty += delta;
@@ -274,7 +282,10 @@
               </div>
               <div>
                 <h4 class="text-xs font-bold text-slate-800 line-clamp-1">${item.name}</h4>
-                <div class="text-xs font-black text-slate-900 mt-0.5">৳ ${item.price}</div>
+                <div class="text-xs font-black text-slate-900 mt-0.5">
+                  ৳ ${item.price}
+                  ${item.regularPrice && item.regularPrice > item.price ? `<span class="text-[10px] text-slate-400 line-through font-normal ml-1">৳${item.regularPrice}</span>` : ''}
+                </div>
                 <div class="flex items-center gap-2 mt-1">
                   <button onclick="updateQty(${idx}, -1)" class="w-5 h-5 rounded bg-slate-100 text-xs font-bold">-</button>
                   <span class="text-xs font-bold">${item.qty}</span>
@@ -320,14 +331,13 @@
       const msg = document.getElementById('promoMsg');
       if (!input || !msg) return;
       const code = input.value.trim();
-      const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
       if (!code) return;
 
       try {
         const res = await fetch('/api/apply-promo/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
-          body: JSON.stringify({ code, subtotal })
+          body: JSON.stringify({ code, items: cart })
         });
         const result = await res.json();
         if (result.status === 'success') {
@@ -374,7 +384,13 @@
           closeCheckoutModal();
           toggleCart();
         } else {
-          alert('Error: ' + result.message);
+          // If deleted product in cart caused failure, auto-clear orphaned items
+          if (result.invalid_items) {
+            cart = [];
+            saveCart();
+            closeCheckoutModal();
+          }
+          alert('Notice: ' + result.message);
         }
       } catch (err) {
         alert('Server communication error. Please try again.');
@@ -409,7 +425,11 @@
                   </div>
                   <div class="flex-1">
                     <div class="text-xs font-bold text-slate-900 line-clamp-1">${item.name}</div>
-                    <div class="text-[11px] font-black text-amber-900">৳ ${item.effective_price}</div>
+                    <div class="text-[10px] text-slate-400 font-mono">Code: ${item.code || 'N/A'}</div>
+                    <div class="text-xs font-black text-amber-900 mt-0.5">
+                      ৳ ${item.effective_price}
+                      ${item.discount_price && item.price > item.discount_price ? `<span class="text-[10px] text-slate-400 line-through font-normal ml-1">৳${item.price}</span>` : ''}
+                    </div>
                   </div>
                   <div class="text-[10px] font-bold ${item.stock > 0 ? 'text-emerald-600' : 'text-rose-500'}">
                     ${item.stock > 0 ? 'In Stock' : 'Out of Stock'}

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ product.name }} - {{ site_setting.site_name }}{% endblock %}
+{% block title %}{{ product.name }} ({{ product.product_code|default:'' }}) - {{ site_setting.site_name }}{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
@@ -15,12 +15,12 @@
   </div>
 
   <!-- Product Core Container -->
-  <div class="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-10">
+  <div class="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200/90 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-10">
     
-    <!-- Left: Image Gallery (Main + Clickable Thumbnail Strip) -->
+    <!-- Left: 6-Images Gallery (Main + Clickable Thumbnail Strip) -->
     <div class="space-y-4">
-      <div class="aspect-square bg-slate-50 rounded-3xl overflow-hidden border flex items-center justify-center p-4 relative">
-        <img id="mainDisplayImage" src="{% if product.image %}{{ product.image.url }}{% endif %}" alt="{{ product.name }}" class="max-h-full max-w-full object-contain transition-all duration-200">
+      <div class="aspect-square bg-slate-50 rounded-3xl overflow-hidden border border-slate-100 flex items-center justify-center p-4 relative shadow-inner">
+        <img id="mainDisplayImage" src="{% if product.image %}{{ product.image.url }}{% endif %}" alt="{{ product.name }}" class="max-h-full max-w-full object-contain transition-all duration-300">
         {% if product.discount_percent > 0 %}
         <span class="absolute top-4 left-4 bg-rose-500 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider shadow">
           {{ product.discount_percent }}% OFF
@@ -28,15 +28,15 @@
         {% endif %}
       </div>
 
-      <!-- Thumbnail Strip -->
+      <!-- Thumbnail Strip (Supports up to 6 images) -->
       <div class="flex gap-3 overflow-x-auto pb-2">
         {% if product.image %}
-        <div onclick="swapMainImage('{{ product.image.url }}', this)" class="gallery-thumb w-16 h-16 rounded-xl border-2 border-amber-900 cursor-pointer overflow-hidden p-1 shrink-0 bg-slate-50">
+        <div onclick="swapMainImage('{{ product.image.url }}', this)" class="gallery-thumb w-16 h-16 rounded-2xl border-2 border-amber-900 cursor-pointer overflow-hidden p-1 shrink-0 bg-slate-50">
           <img src="{{ product.image.url }}" class="w-full h-full object-contain">
         </div>
         {% endif %}
         {% for img in product.images.all %}
-        <div onclick="swapMainImage('{{ img.image.url }}', this)" class="gallery-thumb w-16 h-16 rounded-xl border-2 border-transparent hover:border-slate-300 cursor-pointer overflow-hidden p-1 shrink-0 bg-slate-50">
+        <div onclick="swapMainImage('{{ img.image.url }}', this)" class="gallery-thumb w-16 h-16 rounded-2xl border-2 border-transparent hover:border-slate-300 cursor-pointer overflow-hidden p-1 shrink-0 bg-slate-50">
           <img src="{{ img.image.url }}" class="w-full h-full object-contain">
         </div>
         {% endfor %}
@@ -46,11 +46,16 @@
     <!-- Right: Product Details, Stock & Actions -->
     <div class="space-y-5 flex flex-col justify-between">
       <div class="space-y-3">
-        {% if product.badge_tag %}
-        <span class="inline-block bg-amber-50 text-amber-800 text-xs font-bold px-3 py-1 rounded-full border border-amber-200">
-          🔥 {{ product.badge_tag }}
-        </span>
-        {% endif %}
+        <div class="flex items-center gap-2">
+          <span class="inline-block bg-slate-100 text-slate-700 text-xs font-mono font-bold px-3 py-1 rounded-full border border-slate-200">
+            Code: {{ product.product_code|default:"FT-101" }}
+          </span>
+          {% if product.badge_tag %}
+          <span class="inline-block bg-amber-50 text-amber-800 text-xs font-bold px-3 py-1 rounded-full border border-amber-200">
+            🔥 {{ product.badge_tag }}
+          </span>
+          {% endif %}
+        </div>
 
         <h1 class="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">{{ product.name }}</h1>
 
@@ -62,7 +67,6 @@
           </div>
           <span class="text-slate-300">|</span>
           
-          <!-- Stock Badge -->
           {% if product.stock > 5 %}
           <span class="text-xs font-semibold text-emerald-600 flex items-center gap-1">
             <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> In Stock ({{ product.stock }} units)
@@ -78,11 +82,12 @@
           {% endif %}
         </div>
 
-        <!-- Price -->
+        <!-- Price Display (Corrected Discount Calculations) -->
         <div class="flex items-center gap-3 pt-2">
           <span class="text-3xl font-black text-slate-900">৳ {{ product.effective_price }}</span>
           {% if product.discount_price and product.discount_price < product.price %}
           <span class="text-base text-slate-400 line-through">৳ {{ product.price }}</span>
+          <span class="bg-rose-100 text-rose-700 text-xs font-bold px-2 py-0.5 rounded-md">Save ৳{{ product.price|add:"-product.discount_price" }}</span>
           {% endif %}
         </div>
 
@@ -97,10 +102,10 @@
       <div class="space-y-3 pt-6 border-t">
         <div class="flex gap-4">
           {% if product.stock > 0 %}
-          <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="flex-1 bg-slate-900 hover:bg-black text-white py-3.5 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2 shadow-sm">
+          <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{{ product.price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="flex-1 bg-slate-900 hover:bg-black text-white py-3.5 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2 shadow-sm">
             <i class="fa-solid fa-basket-shopping"></i> Add to Bag
           </button>
-          <button onclick="buyNowSingle('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="flex-1 bg-[#5C3214] hover:opacity-95 text-white py-3.5 rounded-2xl font-bold text-xs transition shadow-lg">
+          <button onclick="buyNowSingle('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{{ product.price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="flex-1 bg-[#5C3214] hover:opacity-95 text-white py-3.5 rounded-2xl font-bold text-xs transition shadow-lg">
             Buy Now
           </button>
           {% else %}
@@ -114,7 +119,7 @@
   </div>
 
   <!-- Reviews & Rating Form Section -->
-  <div class="mt-12 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-8">
+  <div class="mt-12 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-8">
     <div class="flex justify-between items-center border-b pb-4">
       <h3 class="text-lg font-black text-slate-900">Verified Customer Reviews ({{ reviews.count }})</h3>
       <div class="text-xs text-amber-500 font-bold">Average: ★ {{ product.avg_rating }} / 5.0</div>
@@ -127,7 +132,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[11px] font-bold text-slate-600 mb-1">Your Full Name *</label>
-          <input type="text" name="name" required placeholder="e.g. John Doe" class="w-full border rounded-xl px-3 py-2 text-xs bg-white outline-none">
+          <input type="text" name="name" required placeholder="e.g. Mosabbir Ahmad" class="w-full border rounded-xl px-3 py-2 text-xs bg-white outline-none">
         </div>
         <div>
           <label class="block text-[11px] font-bold text-slate-600 mb-1">Rating *</label>
@@ -174,11 +179,12 @@
     <h3 class="text-xl font-black text-slate-900 tracking-tight">You may also like</h3>
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
       {% for rp in related_products %}
-      <div class="bg-white p-3.5 rounded-3xl border border-slate-100 hover:shadow-md transition flex flex-col justify-between group">
+      <div class="bg-white p-3.5 rounded-3xl border border-slate-200/90 hover:shadow-md transition flex flex-col justify-between group">
         <div>
-          <a href="{% url 'product_detail' rp.pk %}" class="aspect-square bg-slate-50 rounded-2xl overflow-hidden p-2 flex items-center justify-center mb-2 block">
+          <a href="{% url 'product_detail' rp.pk %}" class="aspect-square bg-slate-50 rounded-2xl overflow-hidden p-2 flex items-center justify-center mb-2 block border border-slate-100">
             {% if rp.image %}<img src="{{ rp.image.url }}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition">{% endif %}
           </a>
+          <div class="text-[9px] text-slate-400 font-mono font-bold">SKU: {{ rp.product_code|default:"FT-101" }}</div>
           <a href="{% url 'product_detail' rp.pk %}" class="text-xs font-bold text-slate-800 line-clamp-1 block hover:text-amber-900">{{ rp.name }}</a>
           
           {% if rp.stock > 0 %}
@@ -190,7 +196,7 @@
         <div class="mt-3">
           <div class="text-xs font-black text-slate-900 mb-2">৳ {{ rp.effective_price }}</div>
           {% if rp.stock > 0 %}
-          <button onclick="addToBag('{{ rp.id }}', '{{ rp.name|escapejs }}', '{{ rp.effective_price }}', '{% if rp.image %}{{ rp.image.url }}{% endif %}')" class="w-full bg-slate-900 hover:bg-black text-white py-1.5 rounded-xl text-[11px] font-bold transition">
+          <button onclick="addToBag('{{ rp.id }}', '{{ rp.name|escapejs }}', '{{ rp.effective_price }}', '{{ rp.price }}', '{% if rp.image %}{{ rp.image.url }}{% endif %}')" class="w-full bg-slate-900 hover:bg-black text-white py-1.5 rounded-xl text-[11px] font-bold transition">
             Add to Bag
           </button>
           {% else %}
@@ -219,8 +225,8 @@
     thumbElement.classList.add('border-amber-900');
   }
 
-  function buyNowSingle(id, name, price, img) {
-    addToBag(id, name, price, img);
+  function buyNowSingle(id, name, effectivePrice, regularPrice, img) {
+    addToBag(id, name, effectivePrice, regularPrice, img);
     openCheckoutModal();
   }
 </script>

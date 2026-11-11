@@ -13,15 +13,20 @@
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
+  <!-- Cropper.js for Interactive Image Cropping & Zooming -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .btn-purple { background-color: #5B21B6; color: white; }
-    .btn-purple:hover { background-color: #4C1D95; }
-    .active-nav { background-color: #EDE9FE; color: #5B21B6; font-weight: 700; }
+    .btn-purple { background-color: #541DFF; color: white; }
+    .btn-purple:hover { background-color: #4313d6; }
+    .active-nav { background-color: #EDE9FE; color: #541DFF; font-weight: 700; }
   </style>
 </head>
 <body class="bg-[#F8FAFC] text-slate-800 flex h-screen overflow-hidden">
   
+  <!-- Toasts -->
   <div id="toastContainer" class="fixed top-5 right-5 z-50 space-y-2 pointer-events-none">
     {% if messages %}
       {% for message in messages %}
@@ -33,6 +38,7 @@
     {% endif %}
   </div>
 
+  <!-- Global Confirm Delete Modal -->
   <div id="confirmModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl text-center space-y-4">
       <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto text-xl">
@@ -48,11 +54,33 @@
     </div>
   </div>
 
+  <!-- Global Interactive Image Cropper Modal (Zoom In, Zoom Out, Drag) -->
+  <div id="globalCropperModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-xl p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-base">Adjust, Zoom & Position Image</h3>
+        <button onclick="closeCropperModal()" class="text-slate-400 hover:text-black text-2xl">&times;</button>
+      </div>
+      <div class="max-h-[360px] overflow-hidden bg-slate-900 rounded-2xl flex items-center justify-center">
+        <img id="cropperTargetImage" src="" class="max-w-full">
+      </div>
+      <div class="flex items-center justify-center gap-3 text-xs font-bold text-slate-700 py-1">
+        <button type="button" onclick="cropperInstance.zoom(0.1)" class="px-3.5 py-1.5 bg-slate-100 rounded-xl hover:bg-slate-200"><i class="fa-solid fa-magnifying-glass-plus"></i> Zoom In</button>
+        <button type="button" onclick="cropperInstance.zoom(-0.1)" class="px-3.5 py-1.5 bg-slate-100 rounded-xl hover:bg-slate-200"><i class="fa-solid fa-magnifying-glass-minus"></i> Zoom Out</button>
+        <button type="button" onclick="cropperInstance.rotate(90)" class="px-3.5 py-1.5 bg-slate-100 rounded-xl hover:bg-slate-200"><i class="fa-solid fa-rotate-right"></i> Rotate</button>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="closeCropperModal()" class="flex-1 py-2.5 border rounded-xl font-bold text-xs text-slate-600 hover:bg-slate-50">Cancel</button>
+        <button type="button" onclick="applyCroppedImage()" class="flex-1 py-2.5 bg-[#541DFF] text-white rounded-xl font-bold text-xs shadow-md">Apply Image</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Sidebar -->
   <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between overflow-y-auto shrink-0">
     <div>
       <div class="h-20 flex items-center px-6 border-b border-slate-100 gap-3">
-        <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-black text-lg">
+        <div class="w-10 h-10 rounded-xl bg-[#541DFF] text-white flex items-center justify-center font-black text-lg shadow-md shadow-purple-500/20">
           FT
         </div>
         <div>
@@ -85,7 +113,7 @@
           <i class="fa-solid fa-ticket w-4 text-sm"></i> Promo Codes
         </a>
         <a href="{% url 'merchant_analytics' %}" class="flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-slate-100 {% if active_menu == 'analytics' %}active-nav{% endif %}">
-          <i class="fa-solid fa-chart-line w-4 text-sm"></i> Analytics
+          <i class="fa-solid fa-chart-line w-4 text-sm"></i> CEO Analytics
         </a>
         <a href="{% url 'merchant_customize_theme' %}" class="flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-slate-100 {% if active_menu == 'themes' %}active-nav{% endif %}">
           <i class="fa-solid fa-palette w-4 text-sm"></i> Theme Colors
@@ -105,7 +133,7 @@
   <div class="flex-1 flex flex-col overflow-y-auto">
     <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
       <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-        ● Master System Online
+        ● Master Portal Active
       </span>
       <div class="flex items-center gap-6">
         <div class="text-right hidden sm:block">
@@ -131,10 +159,51 @@
     function closeConfirmModal() {
       document.getElementById('confirmModal').classList.add('hidden');
     }
-    setTimeout(() => {
-      const toasts = document.getElementById('toastContainer');
-      if (toasts) toasts.style.display = 'none';
-    }, 4500);
+
+    // Global Cropper Controller
+    let cropperInstance = null;
+    let cropperTargetImg = null;
+    let cropperTargetContainer = null;
+    let cropperTargetPlaceholder = null;
+
+    function openCropper(input, aspectRatio, imgId, containerId, placeholderId) {
+      if (input.files && input.files[0]) {
+        cropperTargetImg = document.getElementById(imgId);
+        cropperTargetContainer = document.getElementById(containerId);
+        cropperTargetPlaceholder = placeholderId ? document.getElementById(placeholderId) : null;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const target = document.getElementById('cropperTargetImage');
+          target.src = e.target.result;
+          document.getElementById('globalCropperModal').classList.remove('hidden');
+
+          if (cropperInstance) cropperInstance.destroy();
+          cropperInstance = new Cropper(target, {
+            aspectRatio: aspectRatio || 1,
+            viewMode: 1,
+            autoCropArea: 0.9,
+            responsive: true,
+          });
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function applyCroppedImage() {
+      if (cropperInstance && cropperTargetImg) {
+        const canvas = cropperInstance.getCroppedCanvas();
+        cropperTargetImg.src = canvas.toDataURL();
+        if (cropperTargetContainer) cropperTargetContainer.classList.remove('hidden');
+        if (cropperTargetPlaceholder) cropperTargetPlaceholder.classList.add('hidden');
+        closeCropperModal();
+      }
+    }
+
+    function closeCropperModal() {
+      document.getElementById('globalCropperModal').classList.add('hidden');
+      if (cropperInstance) cropperInstance.destroy();
+    }
   </script>
 </body>
 </html>

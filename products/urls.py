@@ -28,8 +28,9 @@ urlpatterns = [
     # Products CRUD
     path('mosabbiradmin/products/', views.merchant_products, name='merchant_products'),
     path('mosabbiradmin/products/add/', views.add_product, name='add_product'),
-    path('mosabbiradmin/products/bulk/', views.bulk_product_action, name='bulk_product_action'),
     path('mosabbiradmin/products/<int:pk>/edit/', views.merchant_edit_product, name='merchant_edit_product'),
+    path('mosabbiradmin/products/gallery/<int:pk>/delete/', views.merchant_delete_product_image, name='merchant_delete_product_image'),
+    path('mosabbiradmin/products/bulk/', views.bulk_product_action, name='bulk_product_action'),
     path('mosabbiradmin/products/<int:pk>/delete/', views.merchant_delete_product, name='merchant_delete_product'),
 
     # Categories

@@ -8,7 +8,10 @@ from django.utils.text import slugify
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
+from django.core.cache import cache
 from django.db.models import Avg
+from django.db.models.signals import pre_delete, pre_save
+from django.dispatch import receiver
 
 def optimize_image(image_field, max_size=(1000, 1000), quality=85):
     if not image_field:
@@ -50,6 +53,7 @@ class SiteSetting(models.Model):
     def save(self, *args, **kwargs):
         self.pk = 1
         super().save(*args, **kwargs)
+        cache.delete('global_site_settings')
 
     @classmethod
     def get_settings(cls):
@@ -107,10 +111,25 @@ class Category(models.Model):
                 c += 1
             self.slug = slug
         if self.image:
-            optimize_image(self.image, max_size=(500, 500))
+            optimize_image(self.image, max_size=(600, 600))
         if self.banner:
-            optimize_image(self.banner, max_size=(1400, 400))
+            optimize_image(self.banner, max_size=(1400, 450))
         super().save(*args, **kwargs)
+        cache.delete('global_active_categories')
+
+    def delete(self, *args, **kwargs):
+        if self.image:
+            try:
+                self.image.delete(save=False)
+            except Exception:
+                pass
+        if self.banner:
+            try:
+                self.banner.delete(save=False)
+            except Exception:
+                pass
+        super().delete(*args, **kwargs)
+        cache.delete('global_active_categories')
 
     def __str__(self):
         if self.parent:
@@ -120,6 +139,7 @@ class Category(models.Model):
 
 class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
+    product_code = models.CharField(max_length=50, unique=True, blank=True, null=True, help_text="Unique Product Code / SKU")
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=280, unique=True, blank=True)
     description = models.TextField(blank=True)
@@ -138,6 +158,13 @@ class Product(models.Model):
             raise ValidationError({'discount_price': 'Discount price cannot exceed regular price.'})
 
     def save(self, *args, **kwargs):
+        # Auto-generate unique product_code if not provided
+        if not self.product_code:
+            base_code = f"FT-{uuid.uuid4().hex[:6].upper()}"
+            while Product.objects.filter(product_code=base_code).exclude(pk=self.pk).exists():
+                base_code = f"FT-{uuid.uuid4().hex[:6].upper()}"
+            self.product_code = base_code
+
         if self.discount_price and self.discount_price > self.price:
             self.discount_price = self.price
         if not self.slug:
@@ -151,6 +178,23 @@ class Product(models.Model):
         if self.image:
             optimize_image(self.image, max_size=(900, 900))
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Delete associated gallery images
+        for image in self.images.all():
+            if image.image:
+                try:
+                    image.image.delete(save=False)
+                except Exception:
+                    pass
+            image.delete(save=False)
+        # Delete main image
+        if self.image:
+            try:
+                self.image.delete(save=False)
+            except Exception:
+                pass
+        super().delete(*args, **kwargs)
 
     @property
     def effective_price(self):
@@ -175,7 +219,7 @@ class Product(models.Model):
         return self.reviews.filter(is_approved=True).count()
 
     def __str__(self):
-        return self.name
+        return f"[{self.product_code or 'NO-CODE'}] {self.name}"
 
 
 class ProductImage(models.Model):
@@ -187,6 +231,14 @@ class ProductImage(models.Model):
         if self.image:
             optimize_image(self.image, max_size=(900, 900))
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.image:
+            try:
+                self.image.delete(save=False)
+            except Exception:
+                pass
+        super().delete(*args, **kwargs)
 
 
 class ProductReview(models.Model):
@@ -249,6 +301,8 @@ class PromoCode(models.Model):
     discount_value = models.PositiveIntegerField(default=10, help_text="Amount or Percentage")
     max_discount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     min_purchase = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    usage_limit = models.PositiveIntegerField(null=True, blank=True, help_text="Maximum total usage limit")
+    used_count = models.PositiveIntegerField(default=0, help_text="Number of times redeemed")
     expiry_date = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -258,6 +312,8 @@ class PromoCode(models.Model):
             return False, "This promo code is currently disabled."
         if self.expiry_date and self.expiry_date < timezone.now().date():
             return False, "This promo code has expired."
+        if self.usage_limit is not None and self.used_count >= self.usage_limit:
+            return False, "This promo code has reached its maximum usage limit."
         if self.min_purchase and subtotal < self.min_purchase:
             return False, f"Minimum purchase amount of ৳{self.min_purchase} is required to use this code."
         return True, "Valid"
@@ -300,12 +356,16 @@ class Order(models.Model):
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     promo_code = models.ForeignKey(PromoCode, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='Placed')
-    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='Placed', db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     def save(self, *args, **kwargs):
         if not self.order_id:
-            self.order_id = f"FT-{uuid.uuid4().hex[:8].upper()}"
+            while True:
+                generated_id = f"FT-{uuid.uuid4().hex[:10].upper()}"
+                if not Order.objects.filter(order_id=generated_id).exists():
+                    self.order_id = generated_id
+                    break
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -316,12 +376,16 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     product_name = models.CharField(max_length=255, blank=True)
+    product_code = models.CharField(max_length=50, blank=True, null=True)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=12, decimal_places=2)
 
     def save(self, *args, **kwargs):
-        if self.product and not self.product_name:
-            self.product_name = self.product.name
+        if self.product:
+            if not self.product_name:
+                self.product_name = self.product.name
+            if not self.product_code and self.product.product_code:
+                self.product_code = self.product.product_code
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -354,9 +418,9 @@ class AnalyticsEvent(models.Model):
     browser = models.CharField(max_length=40, blank=True, default='Chrome')
     referrer = models.CharField(max_length=255, blank=True, default='')
     path = models.CharField(max_length=255)
-    event_type = models.CharField(max_length=40, choices=EVENT_TYPES, default='visit')
+    event_type = models.CharField(max_length=40, choices=EVENT_TYPES, default='visit', db_index=True)
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
         ordering = ['-timestamp']
@@ -366,3 +430,82 @@ class SearchQuery(models.Model):
     query = models.CharField(max_length=200)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+
+@receiver(pre_delete, sender=Product)
+def auto_delete_product_files(sender, instance, **kwargs):
+    # Delete associated gallery images
+    for image in instance.images.all():
+        if image.image:
+            try:
+                image.image.delete(save=False)
+            except Exception:
+                pass
+        image.delete(save=False)
+    # Delete main image file
+    if instance.image:
+        try:
+            instance.image.delete(save=False)
+        except Exception:
+            pass
+    # Delete related analytics events
+    instance.analyticsevent_set.all().delete()
+
+
+@receiver(pre_save, sender=Product)
+def auto_delete_old_product_image_on_update(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+    try:
+        old_file = Product.objects.get(pk=instance.pk).image
+    except Product.DoesNotExist:
+        return
+    if old_file and old_file != instance.image:
+        try:
+            old_file.delete(save=False)
+        except Exception:
+            pass
+
+
+@receiver(pre_delete, sender=ProductImage)
+def auto_delete_product_image_file(sender, instance, **kwargs):
+    if instance.image:
+        try:
+            instance.image.delete(save=False)
+        except Exception:
+            pass
+
+
+@receiver(pre_delete, sender=Category)
+def auto_delete_category_files(sender, instance, **kwargs):
+    if instance.image:
+        try:
+            instance.image.delete(save=False)
+        except Exception:
+            pass
+    if instance.banner:
+        try:
+            instance.banner.delete(save=False)
+        except Exception:
+            pass
+
+
+@receiver(pre_save, sender=Category)
+def auto_delete_old_category_files_on_update(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+    try:
+        old_cat = Category.objects.get(pk=instance.pk)
+    except Category.DoesNotExist:
+        return
+    if old_cat.image and old_cat.image != instance.image:
+        try:
+            old_cat.image.delete(save=False)
+        except Exception:
+            pass
+    if old_cat.banner and old_cat.banner != instance.banner:
+        try:
+            old_cat.banner.delete(save=False)
+        except Exception:
+            pass
+

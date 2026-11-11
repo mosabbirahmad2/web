@@ -1,20 +1,21 @@
 {% extends 'merchant/base_merchant.html' %}
-{% block title %}Products Inventory{% endblock %}
+{% block title %}Product Inventory & SKU Management{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto space-y-6">
   <div class="flex justify-between items-center">
     <div>
-      <h1 class="text-2xl font-black text-slate-900">Product Inventory</h1>
-      <p class="text-xs text-slate-400 mt-1">Manage mobile covers, key rings and inventory levels</p>
+      <h1 class="text-2xl font-black text-slate-900">Product Inventory & SKUs</h1>
+      <p class="text-xs text-slate-400 mt-1">Manage product codes, 6-image galleries, and stock availability</p>
     </div>
     <button onclick="document.getElementById('productModal').classList.remove('hidden')" class="btn-purple px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm">
       <i class="fa-solid fa-plus"></i> Add Product
     </button>
   </div>
 
+  <!-- Search & Bulk Update Bar -->
   <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
     <form method="GET" class="relative w-full md:w-80">
-      <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search products..." class="w-full border rounded-xl pl-9 pr-4 py-2 text-xs bg-slate-50 focus:outline-none focus:border-purple-600">
+      <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search by name, SKU..." class="w-full border rounded-xl pl-9 pr-4 py-2 text-xs bg-slate-50 focus:outline-none focus:border-purple-600">
       <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
     </form>
 
@@ -39,7 +40,7 @@
         <thead class="bg-slate-50 text-slate-400 uppercase text-[10px] font-bold border-b">
           <tr>
             <th class="p-4 w-10"><input type="checkbox" id="selectAllProds" onclick="toggleAllProdCheckboxes(this)"></th>
-            <th class="p-4">Item</th>
+            <th class="p-4">SKU / Item</th>
             <th class="p-4">Category</th>
             <th class="p-4">Price / Offer</th>
             <th class="p-4">Stock Status</th>
@@ -61,10 +62,11 @@
                 {% endif %}
               </div>
               <div>
+                <span class="font-mono text-[10px] font-bold text-purple-600 block">Code: {{ product.product_code|default:"FT-101" }}</span>
                 <a href="{% url 'product_detail' product.pk %}" target="_blank" class="font-bold text-slate-900 hover:text-purple-600 line-clamp-1">
                   {{ product.name }}
                 </a>
-                <span class="text-[10px] text-slate-400">Views: {{ product.views_count }}</span>
+                <span class="text-[10px] text-slate-400">Views: {{ product.views_count }} | Gallery: {{ product.images.count }}/5</span>
               </div>
             </td>
             <td class="p-4 font-semibold text-slate-700">{{ product.category.name|default:"Uncategorized" }}</td>
@@ -86,7 +88,8 @@
               {% endif %}
             </td>
             <td class="p-4 text-right space-x-2">
-              <a href="{% url 'merchant_edit_product' product.pk %}" class="p-2 text-slate-400 hover:text-purple-600 transition inline-block">
+              <!-- Working Edit Product Button -->
+              <a href="{% url 'merchant_edit_product' product.pk %}" class="p-2 text-slate-400 hover:text-purple-600 transition inline-block" title="Edit Product">
                 <i class="fa-solid fa-pen"></i>
               </a>
               <button type="button" onclick="triggerActionModal('{% url 'merchant_delete_product' product.pk %}', 'Delete product {{ product.name|escapejs }}?')" class="p-2 text-slate-400 hover:text-rose-600 transition inline-block">
@@ -101,7 +104,6 @@
       </table>
     </div>
 
-    <!-- Pagination Controls (Preserving Query and Category Params) -->
     {% if products.has_other_pages %}
     <div class="p-4 border-t flex justify-between items-center text-xs text-slate-500">
       <span>Page {{ products.number }} of {{ products.paginator.num_pages }}</span>
@@ -118,18 +120,26 @@
   </div>
 </div>
 
+<!-- ============================================================ -->
+<!-- 1. ADD PRODUCT MODAL (Supports Up to 6 Images, SKU & Cropper)-->
+<!-- ============================================================ -->
 <div id="productModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-3xl w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto space-y-4">
+  <div class="bg-white rounded-3xl w-full max-w-3xl p-6 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4">
     <div class="flex justify-between items-center border-b pb-3">
-      <h3 class="font-bold text-slate-900 text-base">Add New Product</h3>
+      <h3 class="font-bold text-slate-900 text-base">Add New Product (6 Images & SKU)</h3>
       <button onclick="document.getElementById('productModal').classList.add('hidden')" class="text-slate-400 text-xl">&times;</button>
     </div>
     <form method="POST" action="{% url 'add_product' %}" enctype="multipart/form-data" class="space-y-4">
       {% csrf_token %}
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Product Title *</label>
-          <input type="text" name="name" required placeholder="e.g. Leather Phone Case" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+          <input type="text" name="name" required placeholder="e.g. Luxury Leather Case" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Product Code / SKU</label>
+          <input type="text" name="product_code" placeholder="e.g. FT-101 (Auto-gen if empty)" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none font-mono uppercase">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Category *</label>
@@ -141,14 +151,14 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Regular Price (৳) *</label>
-          <input type="number" step="0.01" name="price" required class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+          <input type="number" step="0.01" name="price" required placeholder="200" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Offer Price (৳)</label>
-          <input type="number" step="0.01" name="discount_price" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Offer Sale Price (৳)</label>
+          <input type="number" step="0.01" name="discount_price" placeholder="100" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Stock Quantity *</label>
@@ -156,23 +166,147 @@
         </div>
       </div>
 
+      <!-- Main Image Slot (Slot 1) -->
       <div>
-        <label class="block text-xs font-bold text-slate-700 mb-1">Main Image</label>
-        <input type="file" name="main_image" accept="image/*" class="w-full text-xs text-slate-500 border rounded-xl p-2 bg-slate-50">
+        <label class="block text-xs font-bold text-slate-700 mb-1">Primary Display Image (Image 1 of 6)</label>
+        <div class="flex items-center gap-3">
+          <input type="file" id="addProductMainImg" name="main_image" accept="image/*" class="w-full text-xs text-slate-500 border rounded-xl p-2 bg-slate-50" onchange="openCropper(this, 1, 'addMainPreview', 'addMainPrevBox')">
+        </div>
+        <div id="addMainPrevBox" class="hidden mt-2">
+          <img id="addMainPreview" src="" class="w-20 h-20 object-cover rounded-xl border">
+        </div>
+      </div>
+
+      <!-- Gallery Images Slots (Up to 5 images -> Total 6) -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Gallery Images (Up to 5 Additional Photos)</label>
+        <input type="file" name="gallery_images" multiple accept="image/*" class="w-full text-xs text-slate-500 border rounded-xl p-2 bg-slate-50">
+        <p class="text-[10px] text-slate-400 mt-1">Hold Ctrl (Cmd) to select multiple images. Total images on product page: up to 6.</p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Badge Tag</label>
+        <input type="text" name="badge_tag" placeholder="e.g. Hot Product, Top Selling" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
       </div>
 
       <div>
         <label class="block text-xs font-bold text-slate-700 mb-1">Description</label>
-        <textarea name="description" rows="3" class="w-full border rounded-xl p-3 text-xs bg-slate-50 outline-none"></textarea>
+        <textarea name="description" rows="3" placeholder="Features, materials, phone models supported..." class="w-full border rounded-xl p-3 text-xs bg-slate-50 outline-none"></textarea>
       </div>
 
       <div class="flex gap-2 pt-2">
         <button type="button" onclick="document.getElementById('productModal').classList.add('hidden')" class="flex-1 py-2.5 border rounded-xl font-bold text-xs">Cancel</button>
-        <button type="submit" class="flex-1 py-2.5 btn-purple rounded-xl font-bold text-xs shadow-md">Save Product</button>
+        <button type="submit" class="flex-1 py-2.5 btn-purple rounded-xl font-bold text-xs shadow-md">Create Product</button>
       </div>
     </form>
   </div>
 </div>
+
+<!-- ============================================================ -->
+<!-- 2. EDIT PRODUCT MODAL (Pre-filled with 6 Images, SKU & Delete)-->
+<!-- ============================================================ -->
+{% if edit_product %}
+<div id="editProductModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl w-full max-w-3xl p-6 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4">
+    <div class="flex justify-between items-center border-b pb-3">
+      <div>
+        <h3 class="font-bold text-slate-900 text-base">Edit Product: {{ edit_product.name }}</h3>
+        <span class="text-xs font-mono text-purple-600 font-bold">SKU: {{ edit_product.product_code|default:"FT-101" }}</span>
+      </div>
+      <a href="{% url 'merchant_products' %}" class="text-slate-400 hover:text-black text-2xl font-light">&times;</a>
+    </div>
+
+    <form method="POST" action="{% url 'merchant_edit_product' edit_product.pk %}" enctype="multipart/form-data" class="space-y-4">
+      {% csrf_token %}
+      
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Product Title *</label>
+          <input type="text" name="name" value="{{ edit_product.name }}" required class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Product Code / SKU</label>
+          <input type="text" name="product_code" value="{{ edit_product.product_code|default:'' }}" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none font-mono uppercase">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Category *</label>
+          <select name="category" required class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+            {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if edit_product.category and edit_product.category.id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Regular Price (৳) *</label>
+          <input type="number" step="0.01" name="price" value="{{ edit_product.price }}" required class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Offer Sale Price (৳)</label>
+          <input type="number" step="0.01" name="discount_price" value="{{ edit_product.discount_price|default:'' }}" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Stock Quantity *</label>
+          <input type="number" name="stock" value="{{ edit_product.stock }}" required class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+        </div>
+      </div>
+
+      <!-- Current Main Image -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Primary Display Image (Slot 1)</label>
+        <div class="flex items-center gap-4">
+          {% if edit_product.image %}
+          <div class="w-16 h-16 rounded-xl border overflow-hidden shrink-0">
+            <img src="{{ edit_product.image.url }}" class="w-full h-full object-cover">
+          </div>
+          {% endif %}
+          <input type="file" name="main_image" accept="image/*" class="w-full text-xs text-slate-500 border rounded-xl p-2 bg-slate-50" onchange="openCropper(this, 1, 'editMainPreview', 'editMainPrevBox')">
+        </div>
+        <div id="editMainPrevBox" class="hidden mt-2">
+          <img id="editMainPreview" src="" class="w-20 h-20 object-cover rounded-xl border">
+        </div>
+      </div>
+
+      <!-- Gallery Images (Current + Add up to 5) -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Existing Gallery Photos ({{ edit_product.images.count }}/5)</label>
+        <div class="flex flex-wrap gap-3 mb-2">
+          {% for img in edit_product.images.all %}
+          <div class="relative w-16 h-16 rounded-xl border overflow-hidden group">
+            <img src="{{ img.image.url }}" class="w-full h-full object-cover">
+            <form method="POST" action="{% url 'merchant_delete_product_image' img.pk %}" class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+              {% csrf_token %}
+              <button type="submit" class="text-white text-xs hover:text-rose-400" title="Delete image"><i class="fa-solid fa-trash"></i></button>
+            </form>
+          </div>
+          {% empty %}
+          <span class="text-xs text-slate-400">No additional gallery photos.</span>
+          {% endfor %}
+        </div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Add More Gallery Images (Total up to 5)</label>
+        <input type="file" name="gallery_images" multiple accept="image/*" class="w-full text-xs text-slate-500 border rounded-xl p-2 bg-slate-50">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Badge Tag</label>
+        <input type="text" name="badge_tag" value="{{ edit_product.badge_tag|default:'' }}" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Description</label>
+        <textarea name="description" rows="3" class="w-full border rounded-xl p-3 text-xs bg-slate-50 outline-none">{{ edit_product.description }}</textarea>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <a href="{% url 'merchant_products' %}" class="flex-1 py-2.5 border rounded-xl font-bold text-xs text-center text-slate-600 hover:bg-slate-50">Cancel</a>
+        <button type="submit" class="flex-1 py-2.5 btn-purple rounded-xl font-bold text-xs shadow-md">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
 
 <script>
   function toggleAllProdCheckboxes(master) {

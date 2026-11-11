@@ -19,6 +19,7 @@
           <th class="p-4">Code</th>
           <th class="p-4">Discount</th>
           <th class="p-4">Min Spend</th>
+          <th class="p-4">Usage / Limit</th>
           <th class="p-4">Expiry</th>
           <th class="p-4">Status</th>
           <th class="p-4 text-right">Actions</th>
@@ -32,6 +33,9 @@
             {% if p.discount_type == 'percentage' %}{{ p.discount_value }}% OFF{% else %}৳{{ p.discount_value }} Flat{% endif %}
           </td>
           <td class="p-4">৳ {{ p.min_purchase|default:"0.00" }}</td>
+          <td class="p-4 font-semibold">
+            {{ p.used_count }} / {% if p.usage_limit %}{{ p.usage_limit }}{% else %}∞{% endif %}
+          </td>
           <td class="p-4">{{ p.expiry_date|default:"No Expiry" }}</td>
           <td class="p-4">
             <form method="POST" action="{% url 'toggle_promo' p.pk %}" class="inline">
@@ -48,7 +52,7 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="6" class="p-12 text-center text-slate-400">No active promo codes found.</td></tr>
+        <tr><td colspan="7" class="p-12 text-center text-slate-400">No active promo codes found.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -82,8 +86,18 @@
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Max Discount Cap (৳)</label>
+          <input type="number" step="0.01" name="max_discount" placeholder="Optional" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Max Usage Limit</label>
+          <input type="number" name="usage_limit" placeholder="Optional" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Min. Order Total (৳)</label>
-          <input type="number" step="0.01" name="min_purchase" placeholder="0" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
+          <input type="number" step="0.01" name="min_purchase" placeholder="Optional" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Expiry Date</label>

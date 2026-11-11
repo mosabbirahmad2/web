@@ -8,9 +8,9 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'price', 'discount_price', 'stock', 'is_active', 'created_at')
+    list_display = ('product_code', 'name', 'category', 'price', 'discount_price', 'stock', 'is_active', 'created_at')
     list_filter = ('category', 'is_active')
-    search_fields = ('name', 'description')
+    search_fields = ('name', 'product_code', 'description')
 
 admin.site.register(ProductImage)
 admin.site.register(ProductReview)

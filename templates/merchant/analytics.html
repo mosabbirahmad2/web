@@ -1,140 +1,168 @@
 {% extends 'merchant/base_merchant.html' %}
-{% block title %}Analytics Engine - Fantacy Tech{% endblock %}
+{% block title %}Business Analytics & CEO Intelligence{% endblock %}
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <div class="max-w-6xl mx-auto space-y-8">
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div>
-      <h1 class="text-2xl font-black text-slate-900">Business Intelligence & Analytics</h1>
-      <p class="text-xs text-slate-400 mt-1">Real-time metrics, funnel conversions and customer patterns</p>
+      <h1 class="text-2xl font-black text-slate-900">E-Commerce Executive Intelligence</h1>
+      <p class="text-xs text-slate-400 mt-1">Real-time revenue, return rate (RTO), conversion funnel and inventory insights</p>
     </div>
     
     <!-- Time Period Filter -->
     <div class="flex items-center gap-1 bg-white p-1 rounded-2xl border shadow-sm text-xs font-bold">
-      <a href="?period=12h" class="px-3 py-1.5 rounded-xl {% if period == '12h' %}bg-purple-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">12h</a>
-      <a href="?period=24h" class="px-3 py-1.5 rounded-xl {% if period == '24h' %}bg-purple-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">24h</a>
-      <a href="?period=48h" class="px-3 py-1.5 rounded-xl {% if period == '48h' %}bg-purple-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">48h</a>
-      <a href="?period=7d" class="px-3 py-1.5 rounded-xl {% if period == '7d' %}bg-purple-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">7d</a>
-      <a href="?period=15d" class="px-3 py-1.5 rounded-xl {% if period == '15d' %}bg-purple-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">15d</a>
-      <a href="?period=30d" class="px-3 py-1.5 rounded-xl {% if period == '30d' %}bg-purple-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">30d</a>
+      <a href="?period=24h" class="px-3 py-1.5 rounded-xl {% if period == '24h' %}bg-[#541DFF] text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">24h</a>
+      <a href="?period=7d" class="px-3 py-1.5 rounded-xl {% if period == '7d' %}bg-[#541DFF] text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">7d</a>
+      <a href="?period=30d" class="px-3 py-1.5 rounded-xl {% if period == '30d' %}bg-[#541DFF] text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">30d</a>
+      <a href="?period=all" class="px-3 py-1.5 rounded-xl {% if period == 'all' %}bg-[#541DFF] text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">All Time</a>
     </div>
   </div>
 
-  <!-- KPI Grid -->
+  <!-- 1. Executive Performance KPIs -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-    <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-      <div class="text-[10px] font-bold text-slate-400 uppercase">Period Revenue</div>
-      <div class="text-xl font-black text-emerald-600 mt-1">৳ {{ paid_rev }}</div>
+    <div class="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm border-l-4 border-l-emerald-500">
+      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Net Delivered Revenue</div>
+      <div class="text-2xl font-black text-emerald-600 mt-1">৳ {{ net_revenue }}</div>
+      <div class="text-[10px] text-slate-400 mt-1">Pipeline: ৳{{ gross_pipeline }}</div>
     </div>
-    <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-      <div class="text-[10px] font-bold text-slate-400 uppercase">Avg. Order Value</div>
-      <div class="text-xl font-black text-slate-800 mt-1">৳ {{ avg_paid_order }}</div>
+    
+    <div class="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm border-l-4 border-l-blue-500">
+      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Delivery Success Rate</div>
+      <div class="text-2xl font-black text-blue-600 mt-1">{{ delivery_success_rate }}%</div>
+      <div class="text-[10px] text-slate-400 mt-1">{{ delivered_count }} of {{ total_orders_count }} orders delivered</div>
     </div>
-    <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-      <div class="text-[10px] font-bold text-slate-400 uppercase">Conversion Rate</div>
-      <div class="text-xl font-black text-purple-600 mt-1">{{ visitor_to_purchase_rate }}%</div>
+
+    <div class="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm border-l-4 border-l-amber-500">
+      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Return Rate (RTO)</div>
+      <div class="text-2xl font-black {% if return_rate > 10 %}text-rose-600{% else %}text-amber-600{% endif %} mt-1">{{ return_rate }}%</div>
+      <div class="text-[10px] text-slate-400 mt-1">Cancelled: {{ cancel_rate }}%</div>
     </div>
-    <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-      <div class="text-[10px] font-bold text-slate-400 uppercase">Cart Abandonment</div>
-      <div class="text-xl font-black text-rose-500 mt-1">{{ abandoned_carts }}</div>
+
+    <div class="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm border-l-4 border-l-purple-500">
+      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Average Order Value (AOV)</div>
+      <div class="text-2xl font-black text-purple-700 mt-1">৳ {{ aov }}</div>
+      <div class="text-[10px] text-slate-400 mt-1">Conversion: {{ conversion_rate }}%</div>
     </div>
   </div>
 
-  <!-- Charts Row 1: Revenue Trend & Traffic -->
+  <!-- 2. Dual Charts Row: Sales Revenue Trend & Funnel Conversion -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
-      <h3 class="text-xs font-bold uppercase text-slate-500">Revenue Trend (Delivered Sales)</h3>
-      <div class="h-64"><canvas id="revChart"></canvas></div>
+    <div class="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
+      <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Sales & Orders Timeline</h3>
+      <div class="h-64"><canvas id="salesTrendChart"></canvas></div>
     </div>
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
-      <h3 class="text-xs font-bold uppercase text-slate-500">Unique Visitors Traffic</h3>
-      <div class="h-64"><canvas id="trafficChart"></canvas></div>
-    </div>
-  </div>
-
-  <!-- Charts Row 2: Sales Funnel & Order Status Breakdown -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
-      <h3 class="text-xs font-bold uppercase text-slate-500">Store Sales Funnel</h3>
+    
+    <div class="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
+      <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">E-Commerce Conversion Funnel</h3>
       <div class="h-64"><canvas id="funnelChart"></canvas></div>
     </div>
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
-      <h3 class="text-xs font-bold uppercase text-slate-500">Orders Status Distribution</h3>
+  </div>
+
+  <!-- 3. Dual Charts Row: Order Status Breakdown & Regional Demand -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
+      <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Order Status Distribution</h3>
       <div class="h-64"><canvas id="statusChart"></canvas></div>
+    </div>
+    
+    <div class="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
+      <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Top Order Districts</h3>
+      <div class="h-64"><canvas id="districtChart"></canvas></div>
     </div>
   </div>
 
-  <!-- Charts Row 3: Device Analytics & Top Selling Products -->
+  <!-- 4. Deep Intelligence Row: Search Queries & Top Products -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
-      <h3 class="text-xs font-bold uppercase text-slate-500">Device Platform Breakdown</h3>
-      <div class="h-64"><canvas id="deviceChart"></canvas></div>
+    <!-- Search Intelligence (What customers want!) -->
+    <div class="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
+      <div class="flex justify-between items-center">
+        <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Customer Search Intelligence</h3>
+        <span class="text-[10px] text-purple-600 font-bold">Live Demand Insights</span>
+      </div>
+      <p class="text-[11px] text-slate-400">Top searches by prospective buyers on your storefront:</p>
+      <div class="space-y-2 max-h-56 overflow-y-auto">
+        {% for s in top_searches %}
+        <div class="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 border text-xs">
+          <span class="font-bold text-slate-800"><i class="fa-solid fa-magnifying-glass text-slate-400 mr-2 text-[10px]"></i> {{ s.query }}</span>
+          <span class="font-mono text-purple-700 font-bold bg-purple-100/60 px-2 py-0.5 rounded-md">{{ s.c }} searches</span>
+        </div>
+        {% empty %}
+        <p class="text-xs text-slate-400 py-6 text-center">No search logs recorded yet.</p>
+        {% endfor %}
+      </div>
     </div>
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
-      <h3 class="text-xs font-bold uppercase text-slate-500">Top Ordered Products</h3>
-      <div class="h-64"><canvas id="topOrderChart"></canvas></div>
+
+    <!-- Device & Platform Traffic Split -->
+    <div class="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
+      <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Device Platforms</h3>
+      <div class="h-56"><canvas id="deviceChart"></canvas></div>
     </div>
   </div>
 </div>
 
 <script>
-  // 1. Revenue
-  new Chart(document.getElementById('revChart'), {
+  // 1. Sales Trend (Delivered Revenue & Orders)
+  new Chart(document.getElementById('salesTrendChart'), {
     type: 'line',
     data: {
-      labels: {{ rev_labels|safe }},
-      datasets: [{ label: 'Sales (BDT)', data: {{ rev_data|safe }}, borderColor: '#059669', backgroundColor: 'rgba(5, 150, 105, 0.1)', fill: true, tension: 0.3 }]
+      labels: {{ trend_labels|safe }},
+      datasets: [
+        { label: 'Revenue (৳)', data: {{ trend_revenue|safe }}, borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3, yAxisID: 'y' },
+        { label: 'Orders Count', data: {{ trend_orders|safe }}, borderColor: '#541DFF', borderDash: [4, 4], fill: false, tension: 0.2, yAxisID: 'y1' }
+      ]
     },
-    options: { responsive: true, maintainAspectRatio: false }
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { type: 'linear', position: 'left', beginAtZero: true },
+        y1: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }
+      }
+    }
   });
 
-  // 2. Traffic
-  new Chart(document.getElementById('trafficChart'), {
-    type: 'bar',
-    data: {
-      labels: {{ chart_labels|safe }},
-      datasets: [{ label: 'Visitors', data: {{ chart_data|safe }}, backgroundColor: '#7C3AED', borderRadius: 6 }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  // 3. Funnel
+  // 2. Conversion Funnel Chart
   new Chart(document.getElementById('funnelChart'), {
     type: 'bar',
     data: {
       labels: {{ funnel_labels|safe }},
-      datasets: [{ label: 'Users', data: {{ funnel_data|safe }}, backgroundColor: ['#3B82F6', '#8B5CF6', '#EC4899', '#F97316', '#10B981'], borderRadius: 6 }]
+      datasets: [{
+        label: 'Users / Events',
+        data: {{ funnel_data|safe }},
+        backgroundColor: ['#3B82F6', '#8B5CF6', '#EC4899', '#F97316', '#10B981'],
+        borderRadius: 8
+      }]
     },
     options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y' }
   });
 
-  // 4. Status
+  // 3. Status Donut
   new Chart(document.getElementById('statusChart'), {
     type: 'doughnut',
     data: {
       labels: {{ status_labels|safe }},
-      datasets: [{ data: {{ status_data|safe }}, backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#6B7280'] }]
+      datasets: [{ data: {{ status_data|safe }}, backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#9333EA', '#64748B'] }]
     },
     options: { responsive: true, maintainAspectRatio: false }
   });
 
-  // 5. Device
+  // 4. District Demand
+  new Chart(document.getElementById('districtChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ district_labels|safe }},
+      datasets: [{ label: 'Orders', data: {{ district_data|safe }}, backgroundColor: '#541DFF', borderRadius: 8 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  // 5. Device Split
   new Chart(document.getElementById('deviceChart'), {
     type: 'pie',
     data: {
       labels: {{ device_labels|safe }},
       datasets: [{ data: {{ device_data|safe }}, backgroundColor: ['#6366F1', '#EC4899', '#14B8A6'] }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  // 6. Top Ordered
-  new Chart(document.getElementById('topOrderChart'), {
-    type: 'bar',
-    data: {
-      labels: {{ order_labels|safe }},
-      datasets: [{ label: 'Units Sold', data: {{ order_data|safe }}, backgroundColor: '#5C3214', borderRadius: 6 }]
     },
     options: { responsive: true, maintainAspectRatio: false }
   });
