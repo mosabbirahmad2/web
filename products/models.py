@@ -24,7 +24,8 @@ def optimize_image(image_field, max_size=(1000, 1000), quality=85):
         output = BytesIO()
         img.save(output, format='WEBP', quality=quality, optimize=True)
         output.seek(0)
-        orig_name = os.path.splitext(image_field.name)[0]
+        # Strip directory to avoid double-nesting under upload_to paths (e.g. products/products/)
+        orig_name = os.path.splitext(os.path.basename(image_field.name))[0]
         image_field.save(f"{orig_name}.webp", ContentFile(output.read()), save=False)
     except Exception:
         pass
