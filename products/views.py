@@ -739,9 +739,17 @@ def merchant_sections(request):
 
     sections = ShowcaseSection.objects.all().prefetch_related('products')
     all_products = Product.objects.filter(is_active=True)
+
+    total_sections = sections.count()
+    active_sections = sections.filter(is_active=True).count()
+    total_featured_products = sum(s.products.count() for s in sections)
+
     return render(request, 'merchant/sections.html', {
         'sections': sections,
         'all_products': all_products,
+        'total_sections': total_sections,
+        'active_sections': active_sections,
+        'total_featured_products': total_featured_products,
         'active_menu': 'sections',
     })
 
