@@ -33,9 +33,7 @@
             {% if p.discount_type == 'percentage' %}{{ p.discount_value }}% OFF{% else %}৳{{ p.discount_value }} Flat{% endif %}
           </td>
           <td class="p-4">৳ {{ p.min_purchase|default:"0.00" }}</td>
-          <td class="p-4 font-semibold">
-            {{ p.used_count }} / {% if p.usage_limit %}{{ p.usage_limit }}{% else %}∞{% endif %}
-          </td>
+          <td class="p-4 font-semibold">{{ p.used_count }} / {% if p.usage_limit %}{{ p.usage_limit }}{% else %}∞{% endif %}</td>
           <td class="p-4">{{ p.expiry_date|default:"No Expiry" }}</td>
           <td class="p-4">
             <form method="POST" action="{% url 'toggle_promo' p.pk %}" class="inline">
@@ -105,8 +103,8 @@
         </div>
       </div>
       <div class="flex gap-2 pt-2">
-        <button type="button" onclick="document.getElementById('promoModal').classList.add('hidden')" class="flex-1 py-2 border rounded-xl font-bold text-xs">Cancel</button>
-        <button type="submit" class="flex-1 py-2 btn-purple rounded-xl font-bold text-xs shadow-md">Create</button>
+        <button type="button" onclick="document.getElementById('promoModal').classList.add('hidden')" class="flex-1 py-2.5 border rounded-xl font-bold text-xs">Cancel</button>
+        <button type="submit" class="flex-1 py-2.5 btn-purple rounded-xl font-bold text-xs shadow-md">Create</button>
       </div>
     </form>
   </div>

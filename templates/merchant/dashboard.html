@@ -2,18 +2,13 @@
 {% block title %}Dashboard - Store Overview{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto space-y-8">
-  <div>
-    <h1 class="text-2xl font-black text-slate-900">Dashboard & Store Performance</h1>
-    <p class="text-xs text-slate-500 mt-1">Real-time overview of revenue, operations and traffic</p>
-  </div>
-
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
     <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
       <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
         <i class="fa-solid fa-bangladeshi-taka-sign"></i>
       </div>
       <div>
-        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Gross Sales</div>
+        <div class="text-[11px] font-bold text-slate-400 uppercase">Gross Sales</div>
         <div class="text-2xl font-black text-slate-900 mt-0.5">৳ {{ total_sales }}</div>
       </div>
     </div>
@@ -23,7 +18,7 @@
         <i class="fa-solid fa-cart-shopping"></i>
       </div>
       <div>
-        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Orders</div>
+        <div class="text-[11px] font-bold text-slate-400 uppercase">Total Orders</div>
         <div class="text-2xl font-black text-slate-900 mt-0.5">{{ total_orders }}</div>
       </div>
     </div>
@@ -33,7 +28,7 @@
         <i class="fa-solid fa-box"></i>
       </div>
       <div>
-        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Inventory Items</div>
+        <div class="text-[11px] font-bold text-slate-400 uppercase">Products</div>
         <div class="text-2xl font-black text-slate-900 mt-0.5">{{ total_products }}</div>
       </div>
     </div>
@@ -43,14 +38,14 @@
         <i class="fa-solid fa-users"></i>
       </div>
       <div>
-        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Unique Visitors</div>
+        <div class="text-[11px] font-bold text-slate-400 uppercase">Total Visitors</div>
         <div class="text-2xl font-black text-slate-900 mt-0.5">{{ total_visitors }}</div>
       </div>
     </div>
   </div>
 
   <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+    <div class="p-6 border-b flex justify-between items-center">
       <h3 class="font-bold text-slate-900 text-base">Recent Orders</h3>
       <a href="{% url 'merchant_orders' %}" class="text-xs font-bold text-purple-600 hover:underline">View All Orders &rarr;</a>
     </div>
@@ -73,11 +68,7 @@
             <td class="p-4 font-semibold text-slate-900">{{ order.customer_name }}</td>
             <td class="p-4">{{ order.district }}</td>
             <td class="p-4 font-bold text-slate-900">৳ {{ order.total_amount }}</td>
-            <td class="p-4">
-              <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-slate-100 text-slate-700">
-                {{ order.status }}
-              </span>
-            </td>
+            <td class="p-4"><span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-slate-100">{{ order.status }}</span></td>
             <td class="p-4 text-slate-400">{{ order.created_at|date:"M d, H:i" }}</td>
           </tr>
           {% empty %}

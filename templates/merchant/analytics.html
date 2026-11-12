@@ -10,7 +10,6 @@
       <p class="text-xs text-slate-400 mt-1">Real-time revenue, return rate (RTO), conversion funnel and inventory insights</p>
     </div>
     
-    <!-- Time Period Filter -->
     <div class="flex items-center gap-1 bg-white p-1 rounded-2xl border shadow-sm text-xs font-bold">
       <a href="?period=24h" class="px-3 py-1.5 rounded-xl {% if period == '24h' %}bg-[#541DFF] text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">24h</a>
       <a href="?period=7d" class="px-3 py-1.5 rounded-xl {% if period == '7d' %}bg-[#541DFF] text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">7d</a>
@@ -19,12 +18,11 @@
     </div>
   </div>
 
-  <!-- 1. Executive Performance KPIs -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
     <div class="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm border-l-4 border-l-emerald-500">
       <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Net Delivered Revenue</div>
       <div class="text-2xl font-black text-emerald-600 mt-1">৳ {{ net_revenue }}</div>
-      <div class="text-[10px] text-slate-400 mt-1">Pipeline: ৳{{ gross_pipeline }}</div>
+      <div class="text-[10px] text-slate-400 mt-1">Gross Pipeline: ৳{{ gross_pipeline }}</div>
     </div>
     
     <div class="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm border-l-4 border-l-blue-500">
@@ -36,7 +34,7 @@
     <div class="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm border-l-4 border-l-amber-500">
       <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Return Rate (RTO)</div>
       <div class="text-2xl font-black {% if return_rate > 10 %}text-rose-600{% else %}text-amber-600{% endif %} mt-1">{{ return_rate }}%</div>
-      <div class="text-[10px] text-slate-400 mt-1">Cancelled: {{ cancel_rate }}%</div>
+      <div class="text-[10px] text-slate-400 mt-1">Cancelled Orders: {{ cancel_rate }}%</div>
     </div>
 
     <div class="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm border-l-4 border-l-purple-500">
@@ -46,41 +44,51 @@
     </div>
   </div>
 
-  <!-- 2. Dual Charts Row: Sales Revenue Trend & Funnel Conversion -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
       <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Sales & Orders Timeline</h3>
       <div class="h-64"><canvas id="salesTrendChart"></canvas></div>
     </div>
-    
     <div class="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
       <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">E-Commerce Conversion Funnel</h3>
       <div class="h-64"><canvas id="funnelChart"></canvas></div>
     </div>
   </div>
 
-  <!-- 3. Dual Charts Row: Order Status Breakdown & Regional Demand -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
-      <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Order Status Distribution</h3>
-      <div class="h-64"><canvas id="statusChart"></canvas></div>
+      <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Top 10 Selling Products</h3>
+      <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
+        {% for it in top_10_selling %}
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border text-xs">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-purple-100 text-purple-700 font-bold text-[10px] flex items-center justify-center">{{ forloop.counter }}</span>
+            <span class="font-bold text-slate-800">{{ it.product_name }}</span>
+            <span class="text-[10px] text-slate-400 font-mono">({{ it.product_code|default:'N/A' }})</span>
+          </div>
+          <div class="text-right">
+            <span class="font-bold text-slate-900 block">৳ {{ it.total_sales }}</span>
+            <span class="text-[10px] text-emerald-600 font-semibold">{{ it.qty_sold }} sold</span>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-xs text-slate-400 text-center py-6">No sales recorded in this period.</p>
+        {% endfor %}
+      </div>
     </div>
     
     <div class="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
-      <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Top Order Districts</h3>
-      <div class="h-64"><canvas id="districtChart"></canvas></div>
+      <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Top 10 Most Clicked / Viewed Products</h3>
+      <div class="h-64"><canvas id="clickedChart"></canvas></div>
     </div>
   </div>
 
-  <!-- 4. Deep Intelligence Row: Search Queries & Top Products -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Search Intelligence (What customers want!) -->
     <div class="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
       <div class="flex justify-between items-center">
         <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Customer Search Intelligence</h3>
-        <span class="text-[10px] text-purple-600 font-bold">Live Demand Insights</span>
+        <span class="text-[10px] text-purple-600 font-bold">Demand Insights</span>
       </div>
-      <p class="text-[11px] text-slate-400">Top searches by prospective buyers on your storefront:</p>
       <div class="space-y-2 max-h-56 overflow-y-auto">
         {% for s in top_searches %}
         <div class="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 border text-xs">
@@ -93,7 +101,6 @@
       </div>
     </div>
 
-    <!-- Device & Platform Traffic Split -->
     <div class="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
       <h3 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Device Platforms</h3>
       <div class="h-56"><canvas id="deviceChart"></canvas></div>
@@ -102,7 +109,6 @@
 </div>
 
 <script>
-  // 1. Sales Trend (Delivered Revenue & Orders)
   new Chart(document.getElementById('salesTrendChart'), {
     type: 'line',
     data: {
@@ -113,8 +119,7 @@
       ]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       scales: {
         y: { type: 'linear', position: 'left', beginAtZero: true },
         y1: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }
@@ -122,42 +127,24 @@
     }
   });
 
-  // 2. Conversion Funnel Chart
   new Chart(document.getElementById('funnelChart'), {
     type: 'bar',
     data: {
       labels: {{ funnel_labels|safe }},
-      datasets: [{
-        label: 'Users / Events',
-        data: {{ funnel_data|safe }},
-        backgroundColor: ['#3B82F6', '#8B5CF6', '#EC4899', '#F97316', '#10B981'],
-        borderRadius: 8
-      }]
+      datasets: [{ label: 'Events', data: {{ funnel_data|safe }}, backgroundColor: ['#3B82F6', '#8B5CF6', '#EC4899', '#F97316', '#10B981'], borderRadius: 8 }]
     },
     options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y' }
   });
 
-  // 3. Status Donut
-  new Chart(document.getElementById('statusChart'), {
-    type: 'doughnut',
-    data: {
-      labels: {{ status_labels|safe }},
-      datasets: [{ data: {{ status_data|safe }}, backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#9333EA', '#64748B'] }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  // 4. District Demand
-  new Chart(document.getElementById('districtChart'), {
+  new Chart(document.getElementById('clickedChart'), {
     type: 'bar',
     data: {
-      labels: {{ district_labels|safe }},
-      datasets: [{ label: 'Orders', data: {{ district_data|safe }}, backgroundColor: '#541DFF', borderRadius: 8 }]
+      labels: {{ clicked_labels|safe }},
+      datasets: [{ label: 'Clicks / Views', data: {{ clicked_data|safe }}, backgroundColor: '#541DFF', borderRadius: 8 }]
     },
     options: { responsive: true, maintainAspectRatio: false }
   });
 
-  // 5. Device Split
   new Chart(document.getElementById('deviceChart'), {
     type: 'pie',
     data: {

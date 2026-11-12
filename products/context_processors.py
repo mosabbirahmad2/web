@@ -9,9 +9,7 @@ def site_settings_processor(request):
 
     global_categories = cache.get('global_active_categories')
     if global_categories is None:
-        global_categories = list(
-            Category.objects.filter(is_active=True, parent__isnull=True).prefetch_related('subcategories')
-        )
+        global_categories = list(Category.objects.filter(is_active=True, parent__isnull=True).prefetch_related('subcategories'))
         cache.set('global_active_categories', global_categories, timeout=300)
 
     return {

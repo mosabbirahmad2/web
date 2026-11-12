@@ -1,33 +1,115 @@
-{% extends 'index.html' %}
+{% extends 'base.html' %}
+{% block title %}{{ category.name }} - {{ site_setting.site_name }}{% endblock %}
+
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
   <div class="mb-8">
-    <a href="/" class="text-xs font-bold text-amber-900">&larr; Back to Home</a>
-    <h1 class="text-3xl font-black text-slate-900 mt-2">{{ category.name }}</h1>
-    {% if category.short_description %}
-    <p class="text-xs text-slate-500 mt-1">{{ category.short_description }}</p>
-    {% endif %}
+    <div class="flex items-center gap-2 text-xs text-slate-500 font-semibold mb-2">
+      <a href="/" class="hover:text-amber-900 transition">Home</a>
+      <span>/</span>
+      <span>Categories</span>
+      <span>/</span>
+      <span class="text-amber-900 font-bold">{{ category.name }}</span>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-5">
+      <div>
+        <h1 class="text-3xl font-black text-slate-900 tracking-tight">{{ category.name }}</h1>
+        {% if category.short_description %}
+        <p class="text-xs text-slate-500 mt-1 max-w-2xl">{{ category.short_description }}</p>
+        {% endif %}
+      </div>
+      <div class="text-xs font-bold text-slate-500">
+        Showing <span class="text-slate-900 font-black">{{ products.paginator.count|default:products|length }}</span> Product(s)
+      </div>
+    </div>
   </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
     {% for product in products %}
-    <div class="bg-white rounded-3xl p-4 border border-slate-100 hover:shadow-xl transition flex flex-col justify-between">
+    <div class="bg-white rounded-3xl p-4 border border-slate-200/90 hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
       <div>
-        <a href="{% url 'product_detail' product.pk %}" class="aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-3 flex items-center justify-center p-2 block">
-          {% if product.image %}<img src="{{ product.image.url }}" class="w-full h-full object-contain">{% endif %}
+        <div class="aspect-square rounded-2xl bg-slate-50 overflow-hidden mb-3 relative flex items-center justify-center p-2 border border-slate-100">
+          <a href="{% url 'product_detail' product.pk %}" class="w-full h-full flex items-center justify-center">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-contain group-hover:scale-105 transition duration-300">
+            {% else %}
+            <i class="fa-solid fa-box text-slate-300 text-4xl"></i>
+            {% endif %}
+          </a>
+          {% if product.discount_percent > 0 %}
+          <span class="absolute top-2.5 right-2.5 bg-rose-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow">
+            {{ product.discount_percent }}% OFF
+          </span>
+          {% endif %}
+        </div>
+        
+        <div class="text-[10px] text-slate-400 font-mono font-bold">SKU: {{ product.product_code|default:"FT-101" }}</div>
+        <a href="{% url 'product_detail' product.pk %}" class="block font-bold text-slate-800 hover:text-amber-900 transition text-sm mb-1 line-clamp-1 mt-0.5">
+          {{ product.name }}
         </a>
-        <a href="{% url 'product_detail' product.pk %}" class="font-bold text-xs text-slate-800 line-clamp-1 block">{{ product.name }}</a>
+
+        {% if product.stock > 5 %}
+        <div class="text-[11px] font-semibold text-emerald-600 mb-2 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span> In Stock
+        </div>
+        {% elif product.stock > 0 %}
+        <div class="text-[11px] font-bold text-amber-600 mb-2 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block animate-pulse"></span> Only {{ product.stock }} left!
+        </div>
+        {% else %}
+        <div class="text-[11px] font-bold text-rose-600 mb-2 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block"></span> Out of Stock
+        </div>
+        {% endif %}
       </div>
-      <div class="mt-4">
-        <div class="font-black text-slate-900 mb-3">৳ {{ product.effective_price }}</div>
-        <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="w-full bg-slate-900 hover:bg-black text-white py-2 rounded-xl text-xs font-bold">
-          Add to Bag
-        </button>
+
+      <div class="mt-2">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-lg font-black text-slate-900">৳ {{ product.effective_price }}</span>
+          {% if product.discount_price and product.discount_price < product.price %}
+          <span class="text-xs text-slate-400 line-through">৳ {{ product.price }}</span>
+          {% endif %}
+        </div>
+        
+        <div class="flex gap-2">
+          {% if product.stock > 0 %}
+          <button onclick="addToBag('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{{ product.price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="flex-1 bg-slate-900 hover:bg-black text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm">
+            <i class="fa-solid fa-basket-shopping"></i> Add
+          </button>
+          <button onclick="buyNowDirect('{{ product.id }}', '{{ product.name|escapejs }}', '{{ product.effective_price }}', '{{ product.price }}', '{% if product.image %}{{ product.image.url }}{% endif %}')" class="px-3 bg-[#5C3214] hover:opacity-95 text-white py-2 rounded-xl text-xs font-bold transition shadow-sm">
+            Buy Now
+          </button>
+          {% else %}
+          <button disabled class="w-full bg-slate-200 text-slate-400 py-2.5 rounded-xl text-xs font-bold cursor-not-allowed">
+            Out of Stock
+          </button>
+          {% endif %}
+        </div>
       </div>
     </div>
     {% empty %}
-    <div class="col-span-full text-center py-20 text-slate-400">No products found in this category yet.</div>
+    <div class="col-span-full text-center py-24 bg-white rounded-3xl border border-dashed border-slate-200">
+      <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-800 flex items-center justify-center mx-auto text-2xl mb-3">
+        <i class="fa-solid fa-box-open"></i>
+      </div>
+      <h3 class="text-base font-bold text-slate-800">No products in this category yet</h3>
+      <p class="text-xs text-slate-400 mt-1">Please explore other collections or visit our homepage.</p>
+      <a href="/" class="mt-4 inline-block px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-black transition">
+        &larr; Return to Home
+      </a>
+    </div>
     {% endfor %}
   </div>
+
+  {% if products.has_other_pages %}
+  <div class="mt-10 flex justify-between items-center text-xs text-slate-500 border-t pt-4">
+    <span>Page {{ products.number }} of {{ products.paginator.num_pages }}</span>
+    <div class="flex gap-2">
+      {% if products.has_previous %}<a href="?page={{ products.previous_page_number }}" class="px-4 py-2 border rounded-xl font-bold hover:bg-slate-50">&larr; Previous</a>{% endif %}
+      {% if products.has_next %}<a href="?page={{ products.next_page_number }}" class="px-4 py-2 border rounded-xl font-bold hover:bg-slate-50">Next &rarr;</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

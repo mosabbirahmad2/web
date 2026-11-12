@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, ProductImage, ProductReview, Order, OrderItem, PromoCode, SiteSetting
+from .models import Category, Product, ProductImage, ProductReview, Order, OrderItem, PromoCode, SiteSetting, StoreVisitSession
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -8,7 +8,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('product_code', 'name', 'category', 'price', 'discount_price', 'stock', 'is_active', 'created_at')
+    list_display = ('product_code', 'name', 'category', 'price', 'discount_price', 'stock', 'is_active')
     list_filter = ('category', 'is_active')
     search_fields = ('name', 'product_code', 'description')
 
@@ -18,3 +18,4 @@ admin.site.register(Order)
 admin.site.register(OrderItem)
 admin.site.register(PromoCode)
 admin.site.register(SiteSetting)
+admin.site.register(StoreVisitSession)

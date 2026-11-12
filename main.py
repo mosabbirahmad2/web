@@ -31,7 +31,7 @@ if __name__ == "__main__":
     ensure_manage_py()
     if len(sys.argv) == 1:
         try:
-            print("Checking and applying database migrations...")
+            print("Auto-checking database migrations...")
             subprocess.run([sys.executable, "manage.py", "migrate"])
             subprocess.run([sys.executable, "manage.py", "createcachetable"])
             subprocess.run([sys.executable, "manage.py", "runserver", "0.0.0.0:5000"])

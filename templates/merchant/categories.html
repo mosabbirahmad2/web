@@ -2,7 +2,6 @@
 {% block title %}Categories - Merchant Panel{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto space-y-6">
-  <!-- Top Bar (Image 1 Header) -->
   <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <h1 class="text-xl font-bold text-slate-800">Categories</h1>
     
@@ -17,7 +16,6 @@
     </div>
   </div>
 
-  <!-- Categories Table (Image 1 Main Table) -->
   <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
     <table class="w-full text-left text-xs text-slate-600 border-collapse">
       <thead class="bg-slate-50/70 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold tracking-wider">
@@ -36,11 +34,11 @@
           </td>
           <td class="p-4">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+              <div class="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
                 {% if cat.image %}
                   <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover">
                 {% else %}
-                  <i class="fa-regular fa-image text-slate-400 text-sm"></i>
+                  <i class="fa-regular fa-image text-slate-400 text-base"></i>
                 {% endif %}
               </div>
               <div class="flex items-center gap-2">
@@ -84,22 +82,17 @@
   </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- COMPONENT 1: Create Category MODAL (Exact match to Image 1)  -->
-<!-- ============================================================ -->
+<!-- Modal: Create Category -->
 <div id="createCategoryModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in duration-200 max-h-[92vh] overflow-y-auto">
-    <!-- Modal Header -->
+  <div class="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl max-h-[92vh] overflow-y-auto">
     <div class="px-6 py-4 flex justify-between items-center border-b border-slate-100">
       <h3 class="text-base font-bold text-slate-900">Create Category</h3>
       <button type="button" onclick="closeCreateCategoryModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-light leading-none">&times;</button>
     </div>
 
-    <!-- Modal Form -->
     <form method="POST" action="{% url 'merchant_categories' %}" enctype="multipart/form-data" class="p-6 space-y-5">
       {% csrf_token %}
 
-      <!-- 1. Banner/Cover Section -->
       <div>
         <label class="block text-xs font-bold text-slate-700 mb-1.5">Banner/Cover</label>
         <div class="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center bg-slate-50/50 hover:bg-slate-50/80 transition relative min-h-[150px] flex flex-col items-center justify-center">
@@ -114,17 +107,14 @@
               Upload a banner image for the category. Recommended size is 1300×380 pixels. Maximum file size is 4MB.
             </p>
           </div>
-          <input type="file" id="modal_cat_banner" name="banner" accept="image/*" class="hidden" onchange="previewImageFile(this, 'bannerPreviewContainer', 'bannerPreviewImage', 'bannerPlaceholder', 'bannerError')">
+          <input type="file" id="modal_cat_banner" name="banner" accept="image/*" class="hidden" onchange="openCropper(this, 1300/380, 'bannerPreviewImage', 'bannerPreviewContainer', 'bannerPlaceholder')">
           <button type="button" onclick="document.getElementById('modal_cat_banner').click()" class="mt-2 px-4 py-1.5 bg-purple-50 hover:bg-purple-100 text-[#541DFF] text-xs font-semibold rounded-lg transition">
             Add Image
           </button>
-          <div id="bannerError" class="text-[10px] text-rose-500 font-bold mt-1 hidden"></div>
         </div>
       </div>
 
-      <!-- 2. Two-Column Image & Fields Section -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
-        <!-- Left: Image Section (1:1 Square) -->
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1.5">Image</label>
           <div class="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50/50 hover:bg-slate-50/80 transition min-h-[250px] flex flex-col items-center justify-center">
@@ -136,22 +126,20 @@
                 <i class="fa-regular fa-image"></i>
               </div>
               <p class="text-[10.5px] text-slate-500 leading-relaxed">
-                Upload a square image for the category (1:1) aspect ratio. Recommended size is 500×500 pixels. Maximum file size is 4MB. Note: Recommended image size: 770 × 1024 px (Sellora theme).
+                Upload a square image for the category (1:1) aspect ratio. Recommended size is 500×500 pixels. Maximum file size is 4MB.
               </p>
             </div>
-            <input type="file" id="modal_cat_image" name="image" accept="image/*" class="hidden" onchange="previewImageFile(this, 'imagePreviewContainer', 'imagePreviewImage', 'imagePlaceholder', 'imageError')">
+            <input type="file" id="modal_cat_image" name="image" accept="image/*" class="hidden" onchange="openCropper(this, 1, 'imagePreviewImage', 'imagePreviewContainer', 'imagePlaceholder')">
             <button type="button" onclick="document.getElementById('modal_cat_image').click()" class="mt-2 px-4 py-1.5 bg-purple-50 hover:bg-purple-100 text-[#541DFF] text-xs font-semibold rounded-lg transition">
               Add Image
             </button>
-            <div id="imageError" class="text-[10px] text-rose-500 font-bold mt-1 hidden"></div>
           </div>
         </div>
 
-        <!-- Right: Category Name & Short Description -->
         <div class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1.5">Category Name <span class="text-rose-500">*</span></label>
-            <input type="text" name="name" id="modalCatName" maxlength="50" required placeholder="Category Name" oninput="updateCharCount(this, 'nameCharCount')" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50/40 focus:bg-white focus:outline-none focus:border-[#541DFF] transition">
+            <input type="text" name="name" id="modalCatName" maxlength="50" required placeholder="Category Name" oninput="document.getElementById('nameCharCount').innerText = 50 - this.value.length" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50/40 focus:bg-white focus:outline-none focus:border-[#541DFF] transition">
             <div class="text-right text-[10px] text-slate-400 mt-1">Character limit: <span id="nameCharCount">50</span></div>
           </div>
           <div>
@@ -161,7 +149,6 @@
         </div>
       </div>
 
-      <!-- 3. Modal Footer -->
       <div class="flex gap-3 pt-4 border-t border-slate-100">
         <button type="button" onclick="closeCreateCategoryModal()" class="flex-1 py-2.5 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition">
           Cancel
@@ -175,44 +162,7 @@
 </div>
 
 <script>
-  function openCreateCategoryModal() {
-    document.getElementById('createCategoryModal').classList.remove('hidden');
-  }
-  function closeCreateCategoryModal() {
-    document.getElementById('createCategoryModal').classList.add('hidden');
-  }
-
-  function previewImageFile(input, containerId, imageId, placeholderId, errorId) {
-    const errorEl = document.getElementById(errorId);
-    if (errorEl) { errorEl.classList.add('hidden'); errorEl.innerText = ''; }
-
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      if (file.size > 4 * 1024 * 1024) {
-        if (errorEl) {
-          errorEl.innerText = 'File size exceeds 4MB. Please select a smaller file.';
-          errorEl.classList.remove('hidden');
-        }
-        input.value = '';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById(imageId).src = e.target.result;
-        document.getElementById(containerId).classList.remove('hidden');
-        document.getElementById(placeholderId).classList.add('hidden');
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  function updateCharCount(input, countId) {
-    const remaining = 50 - input.value.length;
-    document.getElementById(countId).innerText = remaining;
-  }
-
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeCreateCategoryModal();
-  });
+  function openCreateCategoryModal() { document.getElementById('createCategoryModal').classList.remove('hidden'); }
+  function closeCreateCategoryModal() { document.getElementById('createCategoryModal').classList.add('hidden'); }
 </script>
 {% endblock %}

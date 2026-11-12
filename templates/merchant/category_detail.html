@@ -2,9 +2,7 @@
 {% block title %}Categories > {{ category.name }}{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto space-y-6">
-  <!-- Top Navigation & Actions Bar (Image 2 Top Row) -->
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <!-- Breadcrumb -->
     <div class="flex items-center gap-3">
       <a href="{% url 'merchant_categories' %}" class="w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 transition shadow-sm">
         <i class="fa-solid fa-arrow-left text-xs"></i>
@@ -16,118 +14,92 @@
       </div>
     </div>
 
-    <!-- Right Controls -->
-    <div class="flex items-center gap-2">
-      <div class="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-400">
-        <i class="fa-solid fa-magnifying-glass text-xs"></i>
-      </div>
-      <button onclick="openSubCategoryModal()" class="px-4 py-2 bg-[#541DFF] hover:bg-[#4313d6] text-white text-xs font-semibold rounded-lg flex items-center gap-2 shadow-sm transition">
-        <i class="fa-solid fa-plus text-xs"></i> Add Sub Categories
-      </button>
-    </div>
+    <button onclick="openSubCategoryModal()" class="px-4 py-2 bg-[#541DFF] hover:bg-[#4313d6] text-white text-xs font-semibold rounded-lg flex items-center gap-2 shadow-sm transition">
+      <i class="fa-solid fa-plus text-xs"></i> Add Sub Categories
+    </button>
   </div>
 
-  <!-- Main Two-Column Layout (Image 2) -->
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-    
-    <!-- LEFT COLUMN: Edit Category Form Card (60% Width) -->
     <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
       <form method="POST" enctype="multipart/form-data" class="space-y-5">
         {% csrf_token %}
         <input type="hidden" name="action" value="update_category">
 
-        <!-- Banner/Cover Box -->
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1.5">Banner/Cover</label>
           <div class="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center bg-slate-50/50 hover:bg-slate-50/80 transition relative min-h-[150px] flex flex-col items-center justify-center">
             <div id="detailBannerContainer" class="{% if not category.banner %}hidden{% endif %} w-full mb-3">
-              <img id="detailBannerImage" src="{% if category.banner %}{{ category.banner.url }}{% endif %}" alt="Category Banner" class="h-28 w-full object-cover rounded-lg border border-slate-200 shadow-sm">
+              <img id="detailBannerImage" src="{% if category.banner %}{{ category.banner.url }}{% endif %}" class="h-28 w-full object-cover rounded-lg border">
             </div>
-            <div id="detailBannerPlaceholder" class="{% if category.banner %}hidden{% endif %} space-y-1.5">
-              <div class="w-10 h-10 rounded-xl bg-purple-50 text-[#541DFF] flex items-center justify-center mx-auto text-lg mb-2">
-                <i class="fa-regular fa-image"></i>
-              </div>
+            <div id="detailBannerPlaceholder" class="{% if category.banner %}hidden{% endif %}">
+              <i class="fa-regular fa-image text-2xl text-slate-300 mb-1"></i>
             </div>
-            <input type="file" id="detail_banner_input" name="banner" accept="image/*" class="hidden" onchange="previewImageFile(this, 'detailBannerContainer', 'detailBannerImage', 'detailBannerPlaceholder', 'detailBannerError')">
-            <button type="button" onclick="document.getElementById('detail_banner_input').click()" class="mt-1 px-4 py-1.5 bg-purple-50 hover:bg-purple-100 text-[#541DFF] text-xs font-semibold rounded-lg transition">
+            <input type="file" id="detail_banner_input" name="banner" accept="image/*" class="hidden" onchange="openCropper(this, 1300/380, 'detailBannerImage', 'detailBannerContainer', 'detailBannerPlaceholder')">
+            <button type="button" onclick="document.getElementById('detail_banner_input').click()" class="mt-1 px-4 py-1.5 bg-purple-50 text-[#541DFF] text-xs font-semibold rounded-lg">
               {% if category.banner %}Change Image{% else %}Add Image{% endif %}
             </button>
-            <div id="detailBannerError" class="text-[10px] text-rose-500 font-bold mt-1 hidden"></div>
           </div>
-          <p class="text-[10.5px] text-slate-400 mt-1.5 italic">N.B: Upload a banner image for the category. Recommended size is 1300×380 pixels. Maximum file size is 4MB.</p>
+          <p class="text-[10px] text-slate-400 mt-1 italic">Recommended size is 1300×380 pixels. Max file size: 4MB.</p>
         </div>
 
-        <!-- Two-Column Image & Details Row -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
-          <!-- Square Image Box -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">Image</label>
-            <div class="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50/50 hover:bg-slate-50/80 transition min-h-[220px] flex flex-col items-center justify-center">
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Image (1:1)</label>
+            <div class="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50/50 min-h-[220px] flex flex-col items-center justify-center">
               <div id="detailImageContainer" class="{% if not category.image %}hidden{% endif %} mb-2">
-                <img id="detailImagePreview" src="{% if category.image %}{{ category.image.url }}{% endif %}" alt="Category Image" class="w-24 h-24 object-cover rounded-xl border border-slate-200 shadow-sm">
+                <img id="detailImagePreview" src="{% if category.image %}{{ category.image.url }}{% endif %}" class="w-24 h-24 object-cover rounded-xl border">
               </div>
-              <div id="detailImagePlaceholder" class="{% if category.image %}hidden{% endif %} space-y-1.5">
-                <div class="w-10 h-10 rounded-xl bg-purple-50 text-[#541DFF] flex items-center justify-center mx-auto text-lg mb-2">
-                  <i class="fa-regular fa-image"></i>
-                </div>
+              <div id="detailImagePlaceholder" class="{% if category.image %}hidden{% endif %}">
+                <i class="fa-regular fa-image text-2xl text-slate-300 mb-1"></i>
               </div>
-              <input type="file" id="detail_image_input" name="image" accept="image/*" class="hidden" onchange="previewImageFile(this, 'detailImageContainer', 'detailImagePreview', 'detailImagePlaceholder', 'detailImageError')">
-              <button type="button" onclick="document.getElementById('detail_image_input').click()" class="mt-1 px-4 py-1.5 bg-purple-50 hover:bg-purple-100 text-[#541DFF] text-xs font-semibold rounded-lg transition">
+              <input type="file" id="detail_image_input" name="image" accept="image/*" class="hidden" onchange="openCropper(this, 1, 'detailImagePreview', 'detailImageContainer', 'detailImagePlaceholder')">
+              <button type="button" onclick="document.getElementById('detail_image_input').click()" class="mt-1 px-4 py-1.5 bg-purple-50 text-[#541DFF] text-xs font-semibold rounded-lg">
                 {% if category.image %}Change Image{% else %}Add Image{% endif %}
               </button>
-              <div id="detailImageError" class="text-[10px] text-rose-500 font-bold mt-1 hidden"></div>
             </div>
-            <p class="text-[10px] text-slate-400 mt-1.5 italic leading-relaxed">
-              N.B: Upload a square image for the category (1:1) aspect ratio. Recommended size is 500×500 pixels. Maximum file size is 4MB. Note: Recommended image size: 770 × 1024 px (Sellora theme).
-            </p>
           </div>
 
-          <!-- Edit Inputs -->
           <div class="space-y-4">
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1.5">Category Name <span class="text-rose-500">*</span></label>
-              <input type="text" name="name" value="{{ category.name }}" maxlength="50" required oninput="updateCharCount(this, 'detailCharCount')" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50/40 focus:bg-white focus:outline-none focus:border-[#541DFF] transition">
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">Category Name *</label>
+              <input type="text" name="name" value="{{ category.name }}" maxlength="50" required oninput="document.getElementById('detailCharCount').innerText = 50 - this.value.length" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50/40">
               <div class="text-right text-[10px] text-slate-400 mt-1">Character limit: <span id="detailCharCount">50</span></div>
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1.5">Short Description</label>
-              <textarea name="short_description" rows="5" placeholder="Short description..." class="w-full border border-slate-200 rounded-xl p-3 text-xs bg-slate-50/40 focus:bg-white focus:outline-none focus:border-[#541DFF] transition">{{ category.short_description|default:'' }}</textarea>
+              <textarea name="short_description" rows="5" class="w-full border border-slate-200 rounded-xl p-3 text-xs bg-slate-50/40">{{ category.short_description|default:'' }}</textarea>
             </div>
           </div>
         </div>
 
-        <!-- Full-Width Solid Purple Update Button -->
         <button type="submit" class="w-full py-3 bg-[#541DFF] hover:bg-[#4313d6] text-white rounded-xl text-xs font-bold shadow-md transition">
-          Update
+          Update Category
         </button>
       </form>
     </div>
 
-    <!-- RIGHT COLUMN: Sub-categories Panel / Empty State (Image 2 Right Column) -->
+    <!-- Right Column: Subcategories List / Exact Empty State -->
     <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm min-h-[460px] flex flex-col justify-center">
       {% if subcategories %}
-        <!-- Populated Sub-category List -->
         <div class="w-full space-y-3">
-          <div class="flex justify-between items-center mb-2">
-            <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Sub Categories ({{ subcategories.count }})</h3>
-          </div>
+          <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2">Sub Categories ({{ subcategories.count }})</h3>
           <div class="divide-y divide-slate-100">
             {% for sub in subcategories %}
             <div class="py-3 flex items-center justify-between group">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
-                  {% if sub.image %}
-                    <img src="{{ sub.image.url }}" alt="{{ sub.name }}" class="w-full h-full object-cover">
-                  {% else %}
-                    <i class="fa-solid fa-shapes text-slate-300"></i>
-                  {% endif %}
+                <div class="w-10 h-10 rounded-lg bg-slate-100 border overflow-hidden flex items-center justify-center shrink-0">
+                  {% if sub.image %}<img src="{{ sub.image.url }}" class="w-full h-full object-cover">
+                  {% else %}<i class="fa-solid fa-shapes text-slate-300"></i>{% endif %}
                 </div>
                 <div>
                   <h4 class="text-xs font-bold text-slate-800">{{ sub.name }}</h4>
-                  <span class="text-[10px] text-slate-400">Created: {{ sub.created_at|date:"M d, Y" }}</span>
+                  <span class="text-[10px] text-slate-400">{{ sub.created_at|date:"M d, Y" }}</span>
                 </div>
               </div>
               <div class="flex items-center gap-2">
+                <button type="button" onclick="openEditSubModal('{{ sub.pk }}', '{{ sub.name|escapejs }}', '{{ sub.short_description|escapejs }}')" class="text-slate-400 hover:text-purple-600 p-1" title="Edit subcategory">
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
                 <button type="button" onclick="triggerActionModal('{% url 'merchant_delete_category' sub.pk %}', 'Delete sub-category {{ sub.name|escapejs }}?')" class="text-slate-300 hover:text-rose-600 p-1">
                   <i class="fa-regular fa-trash-can text-xs"></i>
                 </button>
@@ -137,7 +109,6 @@
           </div>
         </div>
       {% else %}
-        <!-- Exact Empty State Matching Image 2 -->
         <div class="text-center space-y-3 py-10">
           <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto text-2xl">
             <i class="fa-solid fa-box-open"></i>
@@ -152,96 +123,73 @@
         </div>
       {% endif %}
     </div>
-
   </div>
 </div>
 
-<!-- =============================================================== -->
-<!-- COMPONENT 3: Create sub-category MODAL (Exact match to Image 3)  -->
-<!-- =============================================================== -->
+<!-- Modal: Create / Edit sub-category -->
 <div id="createSubCategoryModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in duration-200 max-h-[92vh] overflow-y-auto">
-    <!-- Modal Header -->
+  <div class="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl max-h-[92vh] overflow-y-auto">
     <div class="px-6 py-4 flex justify-between items-center border-b border-slate-100">
-      <h3 class="text-base font-bold text-slate-900">Create sub-category</h3>
-      <button type="button" onclick="closeSubCategoryModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-light leading-none">&times;</button>
+      <h3 id="subModalTitle" class="text-base font-bold text-slate-900">Create sub-category</h3>
+      <button type="button" onclick="closeSubCategoryModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-light">&times;</button>
     </div>
 
-    <!-- Modal Form (Submits to merchant_category_detail with action=create_subcategory) -->
     <form method="POST" action="{% url 'merchant_category_detail' category.pk %}" enctype="multipart/form-data" class="p-6 space-y-5">
       {% csrf_token %}
-      <input type="hidden" name="action" value="create_subcategory">
+      <input type="hidden" name="action" id="sub_form_action" value="create_subcategory">
+      <input type="hidden" name="sub_pk" id="sub_pk_field" value="">
 
-      <!-- 1. Banner/Cover Section -->
       <div>
         <label class="block text-xs font-bold text-slate-700 mb-1.5">Banner/Cover</label>
-        <div class="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center bg-slate-50/50 hover:bg-slate-50/80 transition relative min-h-[150px] flex flex-col items-center justify-center">
+        <div class="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center bg-slate-50/50 min-h-[150px] flex flex-col items-center justify-center">
           <div id="subBannerPreviewContainer" class="hidden w-full mb-3">
-            <img id="subBannerPreviewImage" src="" alt="Sub Banner Preview" class="h-28 w-full object-cover rounded-lg border border-slate-200 shadow-sm">
+            <img id="subBannerPreviewImage" src="" class="h-28 w-full object-cover rounded-lg border">
           </div>
-          <div id="subBannerPlaceholder" class="space-y-1.5">
-            <div class="w-10 h-10 rounded-xl bg-purple-50 text-[#541DFF] flex items-center justify-center mx-auto text-lg mb-2">
-              <i class="fa-regular fa-image"></i>
-            </div>
-            <p class="text-[11px] text-slate-500 max-w-md mx-auto leading-relaxed">
-              Upload a banner image for the category. Recommended size is 1300×380 pixels. Maximum file size is 4MB.
-            </p>
+          <div id="subBannerPlaceholder">
+            <i class="fa-regular fa-image text-2xl text-slate-300 mb-1"></i>
+            <p class="text-[11px] text-slate-500 max-w-md mx-auto">Recommended size is 1300×380 pixels. Max file size: 4MB.</p>
           </div>
-          <input type="file" id="modal_sub_banner" name="banner" accept="image/*" class="hidden" onchange="previewImageFile(this, 'subBannerPreviewContainer', 'subBannerPreviewImage', 'subBannerPlaceholder', 'subBannerError')">
-          <button type="button" onclick="document.getElementById('modal_sub_banner').click()" class="mt-2 px-4 py-1.5 bg-purple-50 hover:bg-purple-100 text-[#541DFF] text-xs font-semibold rounded-lg transition">
+          <input type="file" id="modal_sub_banner" name="banner" accept="image/*" class="hidden" onchange="openCropper(this, 1300/380, 'subBannerPreviewImage', 'subBannerPreviewContainer', 'subBannerPlaceholder')">
+          <button type="button" onclick="document.getElementById('modal_sub_banner').click()" class="mt-2 px-4 py-1.5 bg-purple-50 text-[#541DFF] text-xs font-semibold rounded-lg">
             Add Image
           </button>
-          <div id="subBannerError" class="text-[10px] text-rose-500 font-bold mt-1 hidden"></div>
         </div>
       </div>
 
-      <!-- 2. Two-Column Image & Fields Section -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
-        <!-- Left: Image Section (1:1 Square) -->
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1.5">Image</label>
-          <div class="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50/50 hover:bg-slate-50/80 transition min-h-[250px] flex flex-col items-center justify-center">
+          <div class="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50/50 min-h-[250px] flex flex-col items-center justify-center">
             <div id="subImagePreviewContainer" class="hidden mb-2">
-              <img id="subImagePreviewImage" src="" alt="Sub Image Preview" class="w-24 h-24 object-cover rounded-xl border border-slate-200 shadow-sm">
+              <img id="subImagePreviewImage" src="" class="w-24 h-24 object-cover rounded-xl border">
             </div>
-            <div id="subImagePlaceholder" class="space-y-1.5 px-2">
-              <div class="w-10 h-10 rounded-xl bg-purple-50 text-[#541DFF] flex items-center justify-center mx-auto text-lg mb-2">
-                <i class="fa-regular fa-image"></i>
-              </div>
-              <p class="text-[10.5px] text-slate-500 leading-relaxed">
-                Upload a square image for the category (1:1) aspect ratio. Recommended size is 500×500 pixels. Maximum file size is 4MB. Note: Recommended image size: 770 × 1024 px (Sellora theme).
-              </p>
+            <div id="subImagePlaceholder">
+              <i class="fa-regular fa-image text-2xl text-slate-300 mb-1"></i>
+              <p class="text-[10.5px] text-slate-500">Recommended size is 500×500 pixels. Maximum file size is 4MB.</p>
             </div>
-            <input type="file" id="modal_sub_image" name="image" accept="image/*" class="hidden" onchange="previewImageFile(this, 'subImagePreviewContainer', 'subImagePreviewImage', 'subImagePlaceholder', 'subImageError')">
-            <button type="button" onclick="document.getElementById('modal_sub_image').click()" class="mt-2 px-4 py-1.5 bg-purple-50 hover:bg-purple-100 text-[#541DFF] text-xs font-semibold rounded-lg transition">
+            <input type="file" id="modal_sub_image" name="image" accept="image/*" class="hidden" onchange="openCropper(this, 1, 'subImagePreviewImage', 'subImagePreviewContainer', 'subImagePlaceholder')">
+            <button type="button" onclick="document.getElementById('modal_sub_image').click()" class="mt-2 px-4 py-1.5 bg-purple-50 text-[#541DFF] text-xs font-semibold rounded-lg">
               Add Image
             </button>
-            <div id="subImageError" class="text-[10px] text-rose-500 font-bold mt-1 hidden"></div>
           </div>
         </div>
 
-        <!-- Right: Category Name & Short Description -->
         <div class="space-y-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">Category Name <span class="text-rose-500">*</span></label>
-            <input type="text" name="name" id="modalSubCatName" maxlength="50" required placeholder="Category Name" oninput="updateCharCount(this, 'subNameCharCount')" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50/40 focus:bg-white focus:outline-none focus:border-[#541DFF] transition">
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Category Name *</label>
+            <input type="text" name="name" id="modalSubCatName" maxlength="50" required placeholder="Category Name" oninput="document.getElementById('subNameCharCount').innerText = 50 - this.value.length" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50/40">
             <div class="text-right text-[10px] text-slate-400 mt-1">Character limit: <span id="subNameCharCount">50</span></div>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1.5">Short Description</label>
-            <textarea name="short_description" rows="5" placeholder="Short description..." class="w-full border border-slate-200 rounded-xl p-3 text-xs bg-slate-50/40 focus:bg-white focus:outline-none focus:border-[#541DFF] transition"></textarea>
+            <textarea name="short_description" id="modalSubCatDesc" rows="5" placeholder="Short description..." class="w-full border border-slate-200 rounded-xl p-3 text-xs bg-slate-50/40"></textarea>
           </div>
         </div>
       </div>
 
-      <!-- 3. Modal Footer -->
       <div class="flex gap-3 pt-4 border-t border-slate-100">
-        <button type="button" onclick="closeSubCategoryModal()" class="flex-1 py-2.5 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition">
-          Cancel
-        </button>
-        <button type="submit" class="flex-1 py-2.5 bg-[#541DFF] hover:bg-[#4313d6] text-white rounded-xl text-xs font-bold shadow-md transition">
-          Create
-        </button>
+        <button type="button" onclick="closeSubCategoryModal()" class="flex-1 py-2.5 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50">Cancel</button>
+        <button type="submit" class="flex-1 py-2.5 bg-[#541DFF] hover:bg-[#4313d6] text-white rounded-xl text-xs font-bold shadow-md">Save</button>
       </div>
     </form>
   </div>
@@ -249,43 +197,21 @@
 
 <script>
   function openSubCategoryModal() {
+    document.getElementById('subModalTitle').innerText = 'Create sub-category';
+    document.getElementById('sub_form_action').value = 'create_subcategory';
+    document.getElementById('sub_pk_field').value = '';
+    document.getElementById('modalSubCatName').value = '';
+    document.getElementById('modalSubCatDesc').value = '';
     document.getElementById('createSubCategoryModal').classList.remove('hidden');
   }
-  function closeSubCategoryModal() {
-    document.getElementById('createSubCategoryModal').classList.add('hidden');
+  function openEditSubModal(pk, name, desc) {
+    document.getElementById('subModalTitle').innerText = 'Edit sub-category';
+    document.getElementById('sub_form_action').value = 'update_subcategory';
+    document.getElementById('sub_pk_field').value = pk;
+    document.getElementById('modalSubCatName').value = name;
+    document.getElementById('modalSubCatDesc').value = desc;
+    document.getElementById('createSubCategoryModal').classList.remove('hidden');
   }
-
-  function previewImageFile(input, containerId, imageId, placeholderId, errorId) {
-    const errorEl = document.getElementById(errorId);
-    if (errorEl) { errorEl.classList.add('hidden'); errorEl.innerText = ''; }
-
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      if (file.size > 4 * 1024 * 1024) {
-        if (errorEl) {
-          errorEl.innerText = 'File size exceeds 4MB. Please select a smaller file.';
-          errorEl.classList.remove('hidden');
-        }
-        input.value = '';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById(imageId).src = e.target.result;
-        document.getElementById(containerId).classList.remove('hidden');
-        document.getElementById(placeholderId).classList.add('hidden');
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  function updateCharCount(input, countId) {
-    const remaining = 50 - input.value.length;
-    document.getElementById(countId).innerText = remaining;
-  }
-
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeSubCategoryModal();
-  });
+  function closeSubCategoryModal() { document.getElementById('createSubCategoryModal').classList.add('hidden'); }
 </script>
 {% endblock %}

@@ -1,49 +1,17 @@
 {% extends 'merchant/base_merchant.html' %}
-{% block title %}Showcase Sections - Homepage Banners{% endblock %}
+{% block title %}Homepage Sections{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto space-y-6">
   <div class="flex justify-between items-center">
     <div>
       <h1 class="text-2xl font-black text-slate-900">Homepage Showcase Sections</h1>
-      <p class="text-xs text-slate-400 mt-1">Design landing page campaigns: Flash Sales, Featured Drops, Curated Podiums</p>
+      <p class="text-xs text-slate-400 mt-1">Configure Flash Sales, Featured Drops and Custom Sections</p>
     </div>
     <button onclick="document.getElementById('secModal').classList.remove('hidden')" class="btn-purple px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm">
       <i class="fa-solid fa-plus"></i> Create Section
     </button>
   </div>
 
-  <!-- Stats Row -->
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
-      <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0">
-        <i class="fa-solid fa-layer-group"></i>
-      </div>
-      <div>
-        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Sections</div>
-        <div class="text-2xl font-black text-slate-900 mt-0.5">{{ total_sections }}</div>
-      </div>
-    </div>
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
-      <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
-        <i class="fa-solid fa-circle-check"></i>
-      </div>
-      <div>
-        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Active Sections</div>
-        <div class="text-2xl font-black text-slate-900 mt-0.5">{{ active_sections }}</div>
-      </div>
-    </div>
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
-      <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
-        <i class="fa-solid fa-basket-shopping"></i>
-      </div>
-      <div>
-        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Featured Products</div>
-        <div class="text-2xl font-black text-slate-900 mt-0.5">{{ total_featured_products }}</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Sections Grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     {% for sec in sections %}
     <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
@@ -60,7 +28,7 @@
         <div class="flex items-center gap-2">
           <form method="POST" action="{% url 'merchant_toggle_section' sec.pk %}" class="inline">
             {% csrf_token %}
-            <button type="submit" class="text-lg {% if sec.is_active %}text-emerald-600{% else %}text-slate-300{% endif %}" title="Toggle active">
+            <button type="submit" class="text-lg {% if sec.is_active %}text-purple-600{% else %}text-slate-300{% endif %}">
               <i class="fa-solid fa-toggle-on"></i>
             </button>
           </form>
@@ -72,37 +40,13 @@
       <div class="text-xs text-slate-500 font-medium border-t pt-3">
         Assigned Products: <span class="font-bold text-slate-900">{{ sec.products.count }}</span>
       </div>
-      <div class="flex flex-wrap gap-2">
-        {% for p in sec.products.all %}
-        <div class="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
-          {% if p.image %}
-          <img src="{{ p.image.url }}" class="w-8 h-8 object-cover rounded-lg border">
-          {% endif %}
-          <div>
-            <div class="text-[11px] font-bold text-slate-900 line-clamp-1">{{ p.name }}</div>
-            <div class="text-[10px] font-mono font-bold text-purple-600">Code: {{ p.product_code|default:"FT-101" }}</div>
-          </div>
-        </div>
-        {% empty %}
-        <div class="text-xs text-slate-400 font-medium">No products assigned yet. Use “Create Section” to add products.</div>
-        {% endfor %}
-      </div>
     </div>
     {% endfor %}
   </div>
-
-  {% if not sections %}
-  <div class="bg-white p-12 rounded-3xl border border-dashed border-slate-300 text-center space-y-3">
-    <i class="fa-solid fa-layer-group text-4xl text-slate-300"></i>
-    <p class="text-sm font-bold text-slate-900">No Showcase Sections yet</p>
-    <p class="text-xs text-slate-400">Create your first homepage section to feature products.</p>
-  </div>
-  {% endif %}
 </div>
 
-<!-- Modal: Create Section with DateTime Countdown -->
 <div id="secModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-3xl w-full max-w-2xl p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+  <div class="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
     <div class="flex justify-between items-center border-b pb-3">
       <h3 class="font-bold text-slate-900 text-base">Create Showcase Section</h3>
       <button onclick="document.getElementById('secModal').classList.add('hidden')" class="text-slate-400 text-xl">&times;</button>
@@ -131,27 +75,15 @@
       </div>
       <div>
         <label class="block text-xs font-bold text-slate-700 mb-1">Featured Products</label>
-        <div class="border rounded-xl bg-slate-50 max-h-72 overflow-y-auto divide-y divide-slate-100">
+        <select name="products" multiple class="w-full border rounded-xl p-2 text-xs bg-slate-50 h-32 outline-none">
           {% for p in all_products %}
-          <label class="flex items-center gap-3 p-2.5 hover:bg-slate-100/70 cursor-pointer transition rounded-xl">
-            <input type="checkbox" name="products" value="{{ p.id }}" class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500">
-            {% if p.image %}
-            <img src="{{ p.image.url }}" class="w-10 h-10 object-cover rounded-lg border">
-            {% endif %}
-            <div class="flex-1 min-w-0">
-              <div class="text-xs font-bold text-slate-900 truncate">{{ p.name }}</div>
-              <div class="text-[10px] text-slate-400 font-mono font-bold">Code: {{ p.product_code|default:"FT-101" }}</div>
-            </div>
-            <div class="text-xs font-black text-slate-900">৳ {{ p.effective_price }}</div>
-          </label>
-          {% empty %}
-          <div class="p-4 text-center text-xs text-slate-400">No active products available yet.</div>
+          <option value="{{ p.id }}">{{ p.name }} (৳{{ p.effective_price }})</option>
           {% endfor %}
-        </div>
+        </select>
       </div>
       <div class="flex gap-2 pt-2">
-        <button type="button" onclick="document.getElementById('secModal').classList.add('hidden')" class="flex-1 py-2.5 border rounded-xl font-bold text-xs">Cancel</button>
-        <button type="submit" class="flex-1 py-2.5 btn-purple rounded-xl font-bold text-xs shadow-md">Save Section</button>
+        <button type="button" onclick="document.getElementById('secModal').classList.add('hidden')" class="flex-1 py-2 border rounded-xl font-bold text-xs">Cancel</button>
+        <button type="submit" class="flex-1 py-2 btn-purple rounded-xl font-bold text-xs shadow-md">Save</button>
       </div>
     </form>
   </div>
